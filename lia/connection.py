@@ -8,12 +8,14 @@ log = logging.getLogger(__name__)
 _ldap = None
 
 def ldap_connect():
+    global _ldap
+
     if not _ldap:
         cfg = get_config()
-        global _ldap = Connection(
-                server = cfg.uri,
-                user = cfg.binddn,
-                password = cfg.bindpw,
+        _ldap = Connection(
+                server = cfg.ldap.uri,
+                user = cfg.ldap.binddn,
+                password = cfg.ldap.bindpw,
                 raise_exceptions = True)
         _ldap.bind()
 

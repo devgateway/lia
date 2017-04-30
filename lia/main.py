@@ -1,4 +1,6 @@
-import logging, sys, os, argparse, inspect
+import logging, sys, os, argparse
+
+from .config import get_config
 
 def get_logger():
     valid_levels = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
