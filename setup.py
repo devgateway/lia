@@ -7,7 +7,7 @@ setup(
         name = "lia",
         version = "0.1",
         license = "GPLv3+",
-        description = "Dynamic inventory from LDAP for Ansible",
+        description = "LDAP Inventory for Ansible",
         author = "Development Gateway",
         python_requires = ">= 3.4",
         packages = ["lia"],
