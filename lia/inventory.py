@@ -12,6 +12,8 @@ class Host:
 
     @classmethod
     def get(cls, name = None, dn = None):
+        """Factory to instantiate hosts or return loaded ones."""
+
         if name:
             try:
                 host = cls._by_name[name]
@@ -33,10 +35,13 @@ class Host:
 
     @classmethod
     def _load(cls, dn):
+        """Create Host instance from DN."""
+
         pass
 
     @classmethod
     def _find(cls, name):
+        """Create Host instance from common name."""
         pass
 
     def __repr__(self):
