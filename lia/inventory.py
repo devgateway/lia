@@ -9,6 +9,8 @@ _log = logging.getLogger(__name__)
 
 _ldap = ldap_connect()
 _cfg = get_config()
+_host_attr_name = _cfg.hosts.attr.name
+_host_attr_vars = _cfg.hosts.attr.var
 
 def batch(items, batch_size = 2000):
     length = len(items)
@@ -19,7 +21,7 @@ def batch(items, batch_size = 2000):
 
 class NotFoundError(Exception):
     def __init__(self, items):
-        self.items = items
+        self.items = list(items)
 
 class NamesNotFoundError(NotFoundError):
     def __str__(self):
@@ -33,9 +35,11 @@ class Host:
     def __init__(self, entry):
         self.dn = entry.entry_dn
 
-        # select a consistent name value, if there are several
+        # TODO: select a consistent name value, if there are several
+        self.name = entry[_host_attr_name].values[0]
 
         # parse vars values
+        self.vars = json.loads(entry[_host_attr_vars].value)
 
     def __repr__(self):
         return json.dumps(self.vars, indent = 2)
@@ -47,9 +51,7 @@ class Inventory:
     _host_def = ObjectDef(schema = _ldap,
             object_class = _cfg.hosts.objectclass)
     # attributes to request from LDAP
-    _host_attr_name = _cfg.hosts.attr.name
-    _host_attr_var = _cfg.hosts.attr.var
-    _host_attr = [_host_attr_name, _host_attr_var]
+    _host_attr = [_host_attr_name, _host_attr_vars]
 
     def __init__(self, host_name = None):
         self._hosts_by_name = {}
@@ -57,23 +59,8 @@ class Inventory:
         self._host_names = set()
         self._host_dns = set()
 
-        # as we load hosts
-        self._hosts_by_name[host.name] = host
-        self._hosts_by_dn[host.dn] = host
-
     def __iter__(self):
         yield from self._hosts_by_dn.values()
-
-    def _load(cls, dn): # TODO
-        """Create Host instance from DN."""
-
-        reader = Reader(connection = _ldap,
-                base = dn,
-                object_def = cls._host_def,
-                sub_tree = False)
-        entries = reader.search_object(attributes = cls._host_attr)
-
-        return cls(entries[0])
 
     def _add_host(self, entry):
         """Add host object to internal indexes."""
@@ -97,18 +84,16 @@ class Inventory:
         except MissingConfigValue:
             sub = True
 
+        try:
+            size = _cfg.page
+        except MissingConfigValue:
+            size = 100
+
         new_names = list(set(names) - self._host_names)
         found = set()
 
-        batch_size = 2000
-        _log.debug("Searching for %i hosts, %i at a time" % (len(new_names), batch_size))
-
-        for start in new_names[::batch_size]:
-            end = start + batch_size
-            _log.debug("Searching for hosts from %i to %i" % (start, end))
-            batch = new_names[start:end]
-
-            query = _cfg.hosts.attr + ":" + ";".join(batch)
+        for hosts in batch(new_names):
+            query = _cfg.hosts.attr.name + ":" + ";".join(hosts)
 
             reader = Reader(connection = _ldap,
                     query = query,
@@ -116,12 +101,7 @@ class Inventory:
                     object_def = __class__._host_def,
                     sub_tree = sub)
 
-            try:
-                size = _cfg.page
-            except MissingConfigValue:
-                size = 100
-
-            entries = reader.search_paged(attributes = cls._host_attr, paged_size = size)
+            entries = reader.search_paged(attributes = __class__._host_attr, paged_size = size)
             for entry in entries:
                 host = self._add_host(entry)
                 found.add(host.name)
@@ -130,3 +110,17 @@ class Inventory:
         if missing:
             raise NamesNotFoundError(missing)
 
+    def add_hosts_by_dn(self, dns):
+        """Load hosts by DN."""
+
+        for dn in dns:
+            reader = Reader(connection = _ldap,
+                    base = dn,
+                    object_def = __class__._host_def,
+                    sub_tree = False)
+            entries = reader.search_object(attributes = __class__._host_attr)
+
+            if entries:
+                self._add_host(entries[0])
+            else:
+                raise DNsNotFoundError([dn])
