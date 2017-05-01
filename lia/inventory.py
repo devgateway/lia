@@ -23,78 +23,8 @@ class DNsNotFoundError(NotFoundError):
         return "DNs not found:\n" + "\n".join(self.items)
 
 class Host:
-    _by_name = {}
-    _by_dn = {}
-    _object_def = ObjectDef(schema = _ldap,
-            object_class = _cfg.hosts.objectclass)
-    # attributes to request from LDAP
-    _attr_name = _cfg.hosts.attr.name
-    _attr_var = _cfg.hosts.attr.var
-    _attr = [_attr_name, _attr_var]
-
-    @classmethod
-    def get(cls, name = None, dn = None):
-        """Factory to instantiate hosts or return loaded ones."""
-
-        if name:
-            try:
-                host = cls._by_name[name]
-            except KeyError:
-                host = cls._find(name)
-                cls._by_name[name] = host
-                cls._by_dn[host._dn] = host
-        elif dn:
-            try:
-                host = cls._by_dn[dn]
-            except KeyError:
-                host = cls._load(dn)
-                cls._by_name[host.name] = host
-                cls._by_dn[dn] = host
-        else:
-            raise ValueError("Either host name or DN required")
-
-        return host
-
-    @classmethod
-    def _load(cls, dn):
-        """Create Host instance from DN."""
-
-        reader = Reader(connection = _ldap,
-                base = dn,
-                object_def = cls._object_def,
-                sub_tree = False)
-        entries = reader.search_object(attributes = cls._attr)
-
-        return cls(entries[0])
-
-    @classmethod
-    def _find(cls, name):
-        """Create Host instance from common name."""
-
-        query = _cfg.hosts.attr + ":" + name
-
-        try:
-            sub = _cfg.hosts.scope.lower() == "sub"
-        except MissingConfigValue:
-            sub = True
-
-        reader = Reader(connection = _ldap,
-                query = query,
-                base = _cfg.hosts.base,
-                object_def = object_def,
-                sub_tree = sub)
-
-        try:
-            size = _cfg.page
-        except MissingConfigValue:
-            size = 100
-
-        entries = reader.search_paged(attributes = cls._attr, paged_size = size)
-        for entry in entries:
-            return cls(entry)
-
     def __init__(self, entry):
-        self._dn = entry.entry_dn
+        self.dn = entry.entry_dn
 
         # select a consistent name value, if there are several
 
@@ -103,7 +33,93 @@ class Host:
     def __repr__(self):
         return json.dumps(self.vars, indent = 2)
 
-class Inventory:
+    def __str__(self):
+        return self.name
 
-    def __init__(self):
-        pass
+class Inventory:
+    _host_def = ObjectDef(schema = _ldap,
+            object_class = _cfg.hosts.objectclass)
+    # attributes to request from LDAP
+    _host_attr_name = _cfg.hosts.attr.name
+    _host_attr_var = _cfg.hosts.attr.var
+    _host_attr = [_host_attr_name, _host_attr_var]
+
+    def __init__(self, host_name = None):
+        self._hosts_by_name = {}
+        self._hosts_by_dn = {}
+        self._host_names = set()
+        self._host_dns = set()
+
+        # as we load hosts
+        self._hosts_by_name[host.name] = host
+        self._hosts_by_dn[host.dn] = host
+
+    def __iter__(self):
+        yield from self._hosts_by_dn.values()
+
+    def _load(cls, dn): # TODO
+        """Create Host instance from DN."""
+
+        reader = Reader(connection = _ldap,
+                base = dn,
+                object_def = cls._host_def,
+                sub_tree = False)
+        entries = reader.search_object(attributes = cls._host_attr)
+
+        return cls(entries[0])
+
+    def _add_host(self, entry):
+        """Add host object to internal indexes."""
+
+        host = Host(entry)
+
+        name = host.name
+        dn = host.dn
+        self._hosts_by_name[name] = host
+        self._hosts_by_dn[dn] = host
+        self._host_names.add(name)
+        self._host_dns.add(dn)
+
+        return host
+
+    def add_hosts_by_name(self, names):
+        """Load hosts by common names."""
+
+        try:
+            sub = _cfg.hosts.scope.lower() == "sub"
+        except MissingConfigValue:
+            sub = True
+
+        new_names = list(set(names) - self._host_names)
+        found = set()
+
+        batch_size = 2000
+        _log.debug("Searching for %i hosts, %i at a time" % (len(new_names), batch_size))
+
+        for start in new_names[::batch_size]:
+            end = start + batch_size
+            _log.debug("Searching for hosts from %i to %i" % (start, end))
+            batch = new_names[start:end]
+
+            query = _cfg.hosts.attr + ":" + ";".join(batch)
+
+            reader = Reader(connection = _ldap,
+                    query = query,
+                    base = _cfg.hosts.base,
+                    object_def = __class__._host_def,
+                    sub_tree = sub)
+
+            try:
+                size = _cfg.page
+            except MissingConfigValue:
+                size = 100
+
+            entries = reader.search_paged(attributes = cls._host_attr, paged_size = size)
+            for entry in entries:
+                host = self._add_host(entry)
+                found.add(host.name)
+
+        missing = set(new_names) - found
+        if missing:
+            raise NamesNotFoundError(missing)
+
