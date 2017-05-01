@@ -1,14 +1,22 @@
 import logging, json
 
+from ldap3 import ObjectDef, Reader
+
 from .connection import ldap_connect
+from .config import get_config, MissingConfigValue
 
 log = logging.getLogger(__name__)
 
 _ldap = ldap_connect()
+_cfg = get_config()
 
 class Host:
     _by_name = {}
     _by_dn = {}
+    _object_def = ObjectDef(schema = _ldap,
+            object_class = _cfg.hosts.objectclass)
+    # attributes to request from LDAP
+    _attr = [_cfg.hosts.attr.name, _cfg.hosts.attr.var]
 
     @classmethod
     def get(cls, name = None, dn = None):
@@ -37,11 +45,41 @@ class Host:
     def _load(cls, dn):
         """Create Host instance from DN."""
 
-        pass
+        reader = Reader(connection = _ldap,
+                base = dn,
+                object_def = cls._object_def,
+                sub_tree = False)
+        entries = reader.search_object(attributes = cls._attr)
+
+        return cls(entries[0])
 
     @classmethod
     def _find(cls, name):
         """Create Host instance from common name."""
+
+        query = _cfg.hosts.attr + ":" + name
+
+        try:
+            sub = _cfg.hosts.scope.lower() == "sub"
+        except MissingConfigValue:
+            sub = True
+
+        reader = Reader(connection = _ldap,
+                query = query,
+                base = _cfg.hosts.base,
+                object_def = object_def,
+                sub_tree = sub)
+
+        try:
+            size = _cfg.page
+        except MissingConfigValue:
+            size = 100
+
+        entries = reader.search_paged(attributes = cls._attr, paged_size = size)
+        for entry in entries:
+            return cls(entry)
+
+    def __init__(self, entry):
         pass
 
     def __repr__(self):
