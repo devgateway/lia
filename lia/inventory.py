@@ -10,6 +10,18 @@ _log = logging.getLogger(__name__)
 _ldap = ldap_connect()
 _cfg = get_config()
 
+class NotFoundError(Exception):
+    def __init__(self, items):
+        self.items = items
+
+class NamesNotFoundError(NotFoundError):
+    def __str__(self):
+        return "Names not found: " + ", ".join(self.items)
+
+class DNsNotFoundError(NotFoundError):
+    def __str__(self):
+        return "DNs not found:\n" + "\n".join(self.items)
+
 class Host:
     _by_name = {}
     _by_dn = {}
