@@ -16,7 +16,9 @@ class Host:
     _object_def = ObjectDef(schema = _ldap,
             object_class = _cfg.hosts.objectclass)
     # attributes to request from LDAP
-    _attr = [_cfg.hosts.attr.name, _cfg.hosts.attr.var]
+    _attr_name = _cfg.hosts.attr.name
+    _attr_var = _cfg.hosts.attr.var
+    _attr = [_attr_name, _attr_var]
 
     @classmethod
     def get(cls, name = None, dn = None):
@@ -80,7 +82,11 @@ class Host:
             return cls(entry)
 
     def __init__(self, entry):
-        pass
+        self._dn = entry.entry_dn
+
+        # select a consistent name value, if there are several
+
+        # parse vars values
 
     def __repr__(self):
         return json.dumps(self.vars, indent = 2)
