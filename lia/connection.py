@@ -13,9 +13,9 @@ def ldap_connect():
     if not _ldap:
         cfg = get_config()
         _ldap = Connection(
-                server = cfg.ldap.uri,
-                user = cfg.ldap.binddn,
-                password = cfg.ldap.bindpw,
+                server = cfg.uri,
+                user = cfg.binddn,
+                password = cfg.bindpw,
                 raise_exceptions = True)
         _ldap.bind()
 
