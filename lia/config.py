@@ -2,6 +2,9 @@ import logging, os, json
 
 _cfg = None
 
+class MissingConfigValue(Exception):
+    pass
+
 def get_config():
     global _cfg
 
@@ -36,5 +39,6 @@ class Config:
             else:
                 return attr
 
-        except KeyError:
-            return None
+        except KeyError as err:
+            msg = "Value '%s' is missing in config" % name
+            raise MissingConfigValue(msg) from err
