@@ -4,7 +4,7 @@ from ldap3 import Connection
 
 from .config import get_config, MissingConfigValue
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 _ldap = None
 
 def ldap_connect():

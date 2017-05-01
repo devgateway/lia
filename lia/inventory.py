@@ -5,7 +5,7 @@ from ldap3 import ObjectDef, Reader
 from .connection import ldap_connect
 from .config import get_config, MissingConfigValue
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 _ldap = ldap_connect()
 _cfg = get_config()
