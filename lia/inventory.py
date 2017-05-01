@@ -1,6 +1,7 @@
 import logging, json
 
 from ldap3 import ObjectDef, Reader
+from ldap3.utils.dn import safe_rdn
 
 from .connection import ldap_connect
 from .config import get_config, MissingConfigValue
@@ -19,6 +20,37 @@ def batch(items, batch_size = 2000):
         end = start + batch_size
         yield items[start:end]
 
+def entry_name(entry, name_attr):
+    """Return consistent scalar entry common name."""
+
+    values = entry[name_attr].values
+
+    if len(values) == 1:
+        # if there's just one value, use it
+        name = values[0]
+    else:
+        name_vals = set(values)
+
+        # find, if any of them are in RDN
+        rdn_vals = set()
+        for component in safe_rdn(entry.entry_dn, decompose = True):
+            if component[0] == name_attr:
+                rdn_vals.add(component[1])
+
+        common_vals = rdn_vals & name_vals
+        matched = len(common_vals)
+        if matched == 1:
+            # only one value used in RDN
+            name = list(common_vals)[0]
+        elif matched:
+            # multiple values in RDN; use first of them alphabetically
+            name = sorted(list(common_vals))[0]
+        else:
+            # none in RDN at all; use first name alphabetically
+            name = sorted(list(name_vals))[0]
+
+    return name
+
 class NotFoundError(Exception):
     def __init__(self, items):
         self.items = list(items)
@@ -35,8 +67,8 @@ class Host:
     def __init__(self, entry):
         self.dn = entry.entry_dn
 
-        # TODO: select a consistent name value, if there are several
-        self.name = entry[_host_attr_name].values[0]
+        # select a consistent name value, if there are several
+        self.name = entry_name(entry, _host_attr_name)
 
         # parse vars values
         self.vars = json.loads(entry[_host_attr_vars].value)
