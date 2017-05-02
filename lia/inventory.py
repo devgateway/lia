@@ -93,6 +93,13 @@ class Inventory:
         self._host_names = set()
         self._host_dns = set()
 
+        if host_name:
+            # only add one host, and exit (host mode)
+            self.add_hosts_by_name([host_name])
+        else:
+            # add all groups and hosts (list mode)
+            self._load_groups
+
     def __iter__(self):
         yield from self._hosts_by_dn.values()
 

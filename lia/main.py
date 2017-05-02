@@ -37,9 +37,7 @@ def main():
         log.debug("Requested the whole inventory")
     else:
         log.debug("Requested vars for host " + args.host)
-        inventory = Inventory()
-        inventory.add_hosts_by_name([args.host])
-        for host in inventory:
+        for host in Inventory(args.host):
             print(repr(host))
 
 if __name__ == "__main__":
