@@ -71,7 +71,9 @@ class Host:
         self.name = entry_name(entry, _host_attr_name)
 
         # parse vars values
-        self.vars = json.loads(entry[_host_attr_vars].value)
+        self.vars = {}
+        for val in entry[_host_attr_vars].values:
+            self.vars.update(json.loads(val))
 
     def __repr__(self):
         return json.dumps(self.vars, indent = 2)
