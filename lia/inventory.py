@@ -81,6 +81,32 @@ class Host:
     def __str__(self):
         return self.name
 
+class Group:
+    def __init__(self, entry, settings):
+        self._hosts = set()
+        self._children = set()
+        self._name = entry_name(entry, settings.attr.name)
+        self._vars = {}
+        for val in entry[settings.attr.var].values:
+            self.vars.update(json.loads(val))
+
+    def __str__(self):
+        return self._name
+
+class AttributalGroup(Group):
+    def __init__(self, entry, settings, inventory):
+        super().__init__(entry, settings)
+
+        children = entry[settings.attr.host].values
+        if settings.attr.host_is_dn:
+            self._children = inventory.add_hosts_by_dn(children)
+        else:
+            self._children = inventory.add_hosts_by_name(children)
+
+class StructuralGroup(Group):
+    def __init__(self, entry, settings):
+        super().__init__(entry, settings)
+
 class Inventory:
     _host_def = ObjectDef(schema = _ldap,
             object_class = _cfg.hosts.objectclass)
@@ -130,10 +156,13 @@ class Inventory:
         except MissingConfigValue:
             size = 100
 
-        new_names = list(set(names) - self._host_names)
+        names = set(names)
+        new_names = names - self._host_names
+        existing_names = names & self._host_names
         found = set()
+        all_hosts = set()
 
-        for hosts in batch(new_names):
+        for hosts in batch(list(new_names)):
             query = _cfg.hosts.attr.name + ":" + ";".join(hosts)
 
             reader = Reader(connection = _ldap,
@@ -146,14 +175,21 @@ class Inventory:
             for entry in entries:
                 host = self._add_host(entry)
                 found.add(host.name)
+                all_hosts.add(host)
 
-        missing = set(new_names) - found
+        missing = new_names - found
         if missing:
             raise NamesNotFoundError(missing)
+
+        for name in existing_names:
+            all_hosts.add(self._hosts_by_name[name])
+
+        return all_hosts
 
     def add_hosts_by_dn(self, dns):
         """Load hosts by DN."""
 
+        all_hosts = set()
         for dn in dns:
             reader = Reader(connection = _ldap,
                     base = dn,
@@ -162,6 +198,9 @@ class Inventory:
             entries = reader.search_object(attributes = __class__._host_attr)
 
             if entries:
-                self._add_host(entries[0])
+                host = self._add_host(entries[0])
+                all_hosts.add(host)
             else:
                 raise DNsNotFoundError([dn])
+
+        return all_hosts
