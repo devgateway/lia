@@ -21,8 +21,8 @@ class LdapNode:
 
 class LdapTree:
     def __init__(self):
-        self._top = LdapNode(parent = None)
-        self._nodes_with_data = set()
+        self.__top = LdapNode(parent = None)
+        self.__nodes_with_data = set()
         self.__petrified = False
 
     def add_node(self, dn, data):
@@ -31,7 +31,7 @@ class LdapTree:
 
         path = _dn_to_path(dn)
         # start from top node
-        node = self._top
+        node = self.__top
         toplevel = True
         # descend to destination
         for name in path:
@@ -52,25 +52,25 @@ class LdapTree:
         else:
             node.data = data
             node.toplevel = toplevel
-            self._nodes_with_data.add(node)
+            self.__nodes_with_data.add(node)
 
     def __iter__(self):
         if not self.__petrified:
             self._petrify()
             self.__petrified = True
 
-        for node in self._nodes_with_data:
+        for node in self.__nodes_with_data:
             if node.toplevel:
                 yield node
 
     def _petrify(self):
-        for node in self._nodes_with_data:
+        for node in self.__nodes_with_data:
             if node.toplevel:
                 # try to prove it by traversing the tree upwards
                 # and looking for possible parent
                 parent = node.parent
                 while True:
-                    if parent == self._top: # no parents found
+                    if parent == self.__top: # no parents found
                         break
                     elif parent.data: # found the parent
                         node.toplevel = False
