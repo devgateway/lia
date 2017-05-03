@@ -1,7 +1,7 @@
 import logging, sys, os, argparse
 
 from .config import get_config
-from .inventory import Inventory
+from .inventory import Inventory, Host
 
 def get_logger():
     valid_levels = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
@@ -37,8 +37,8 @@ def main():
         log.debug("Requested the whole inventory")
     else:
         log.debug("Requested vars for host " + args.host)
-        for host in Inventory(args.host):
-            print(repr(host))
+        host = Host.get_one(args.host)
+        print(repr(host))
 
 if __name__ == "__main__":
     main()
