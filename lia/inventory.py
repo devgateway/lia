@@ -63,20 +63,24 @@ class Host():
     __attr = [__attr_name, __attr_vars]
     __base = _cfg.hosts.base
 
-    @classmethod
-    def get_one(cls, name):
-        """Fetch a single host (inventory host mode)."""
-
+    @staticmethod
+    def sub():
         try:
             sub = _cfg.hosts.scope.lower() == "sub"
         except MissingConfigValue:
             sub = True
 
+        return sub
+
+    @classmethod
+    def get_one(cls, name):
+        """Fetch a single host (inventory host mode)."""
+
         reader = Reader(connection = _ldap,
                 query = cls.__attr_name + ":" + name,
                 base = cls.__base,
                 object_def = cls.__def,
-                sub_tree = sub)
+                sub_tree = cls.sub())
 
         entries = reader.search(attributes = cls.__attr)
         return cls(entries[0])
@@ -94,7 +98,7 @@ class Host():
         reader = Reader(connection = _ldap,
                 base = cls.__base,
                 object_def = cls.__def,
-                sub_tree = sub)
+                sub_tree = cls.sub())
 
         entries = reader.search_paged(paged_size = size,
                 attributes = cls.__attr)
@@ -102,6 +106,8 @@ class Host():
             host = cls(entry)
             by_name[host.name] = host
             by_dn[host.dn] = host
+
+        return (by_name, by_dn)
 
     def __init__(self, entry):
         self.dn = entry.entry_dn
@@ -131,6 +137,9 @@ class Group():
     def __str__(self):
         return self._name
 
+    def add_host(self, host):
+        self._hosts.add(host)
+
 class AttributalGroup(Group):
     def __init__(self, entry, settings, inventory):
         super().__init__(entry, settings)
@@ -145,8 +154,12 @@ class StructuralGroup(Group):
     def __init__(self, entry, settings):
         super().__init__(entry, settings)
 
-        self._children = set()
+        self._groups = set()
+
+    def add_group(self, group):
+        self._groups.add(group)
 
 class Inventory:
     def __init__(self):
-        pass
+        self._tree = LdapTree()
+        (self._hosts_by_name, self._hosts_by_dn) = Host.load_all()

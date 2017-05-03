@@ -35,6 +35,7 @@ def main():
 
     if args.list:
         log.debug("Requested the whole inventory")
+        inventory = Inventory()
     else:
         log.debug("Requested vars for host " + args.host)
         host = Host.get_one(args.host)
