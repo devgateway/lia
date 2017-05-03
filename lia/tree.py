@@ -7,41 +7,84 @@ class NodeNotEmptyError(Exception):
     def __str__(self):
         return "Node already added: " + self.dn
 
+class TreePetrifiedError(Exception):
+    def __str__(self):
+        return "Tree has become read-only, adding nodes not permitted"
+
 class LdapNode:
-    def __init__(self, parent, name, data):
-        self.name = name
+    def __init__(self, parent):
         self.parent = parent
-        self.child_nodes = set()
-        self.data = data
-
-    def get_child(self, name):
-        for child in self.child_nodes:
-            if child._name == name:
-                return child
-
-        child = __class__(name)
-        self.child_nodes.add(child)
-        child.parent = self
-        return child
+        self.leaves = {}
+        self.children = None
+        self.data = None
+        self.toplevel = True # TBD
 
 class LdapTree:
     def __init__(self):
-        self._top = LdapNode(name = None, data = None)
-        self._all = set()
+        self._top = LdapNode(parent = None)
+        self._nodes_with_data = set()
+        self.__petrified = False
 
     def add_node(self, dn, data):
-        node = self._top
+        if self.__petrified:
+            raise TreePetrifiedError()
 
-        for name in reversed(path):
-            node = node.get_child(name)
+        path = _dn_to_path(dn)
+        # start from top node
+        node = self._top
+        toplevel = True
+        # descend to destination
+        for name in path:
+            # select or create each node in path
+            try:
+                node = node.leaves[name]
+            except KeyError:
+                parent = node
+                node = LdapNode(parent = parent)
+                parent.leaves[name] = node
+
+            # if any parent has data, child is definitely not top level
+            if node.data:
+                toplevel = False
 
         if node.data:
             raise NodeNotEmptyError(path)
         else:
             node.data = data
+            node.toplevel = toplevel
+            self._nodes_with_data.add(node)
 
     def __iter__(self):
-        return iter(self._all)
+        if not self.__petrified:
+            self._petrify()
+            self.__petrified = True
+
+        for node in self._nodes_with_data:
+            if node.toplevel:
+                yield node
+
+    def _petrify(self):
+        for node in self._nodes_with_data:
+            if node.toplevel:
+                # try to prove it by traversing the tree upwards
+                # and looking for possible parent
+                parent = node.parent
+                while True:
+                    if parent == self._top: # no parents found
+                        break
+                    elif parent.data: # found the parent
+                        node.toplevel = False
+
+                        try:
+                            parent.children.add(node)
+                        except AttributeError:
+                            parent.children = set()
+                            parent.children.add(node)
+
+                        break
+
+                    else: # continue traversing
+                        parent = node.parent
 
     @staticmethod
     def _dn_to_path(dn):
