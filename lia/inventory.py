@@ -4,13 +4,25 @@ from ldap3 import ObjectDef, Reader
 from ldap3.utils.dn import safe_rdn
 
 from .connection import ldap_connect
-from .config import get_config, MissingConfigValue
+from .config import get_config, MissingConfigValue, Config
 from .tree import LdapTree
 
 _log = logging.getLogger(__name__)
 
 _ldap = ldap_connect()
 _cfg = get_config()
+try:
+    _page_size = _cfg.page
+except MissingConfigValue:
+    _page_size = 100
+
+def sub(settings):
+    try:
+        sub = settings.scope.lower() == "sub"
+    except MissingConfigValue:
+        sub = True
+
+    return sub
 
 def entry_name(entry, name_attr):
     """Return consistent scalar entry common name."""
@@ -63,15 +75,6 @@ class Host():
     __attr = [__attr_name, __attr_vars]
     __base = _cfg.hosts.base
 
-    @staticmethod
-    def sub():
-        try:
-            sub = _cfg.hosts.scope.lower() == "sub"
-        except MissingConfigValue:
-            sub = True
-
-        return sub
-
     @classmethod
     def get_one(cls, name):
         """Fetch a single host (inventory host mode)."""
@@ -80,7 +83,7 @@ class Host():
                 query = cls.__attr_name + ":" + name,
                 base = cls.__base,
                 object_def = cls.__def,
-                sub_tree = cls.sub())
+                sub_tree = sub(_cfg.hosts))
 
         entries = reader.search(attributes = cls.__attr)
         return cls(entries[0])
@@ -90,17 +93,12 @@ class Host():
         by_name = {}
         by_dn = {}
 
-        try:
-            size = _cfg.page
-        except MissingConfigValue:
-            size = 100
-
         reader = Reader(connection = _ldap,
                 base = cls.__base,
                 object_def = cls.__def,
-                sub_tree = cls.sub())
+                sub_tree = sub(_cfg.hosts))
 
-        entries = reader.search_paged(paged_size = size,
+        entries = reader.search_paged(paged_size = _page_size,
                 attributes = cls.__attr)
         for entry in entries:
             host = cls(entry)
@@ -127,12 +125,10 @@ class Host():
         return self.name
 
 class Group():
-    def __init__(self, entry, settings):
+    def __init__(self, name):
         self._hosts = set()
-        self._name = entry_name(entry, settings.attr.name)
+        self._name = name
         self._vars = {}
-        for json_vars in entry[settings.attr.var].values:
-            self.vars.update(json.loads(json_vars))
 
     def __str__(self):
         return self._name
@@ -140,26 +136,71 @@ class Group():
     def add_host(self, host):
         self._hosts.add(host)
 
-class AttributalGroup(Group):
-    def __init__(self, entry, settings, inventory):
-        super().__init__(entry, settings)
+    @staticmethod
+    def from_settings(settings):
+        groups = []
 
-        self.want_dn = settings.attr.host_is_dn
+        attrs = [settings.attr.name, settings.attr.var]
+        try:
+            attrs.append(settings.attr.host)
+            want_dn = settings.attr.host_is_dn
+            group_type = "attributal"
+            cls = AttributalGroup
+        except MissingConfigValue:
+            host_attr = None
+            group_type = "structural"
+            cls = StructuralGroup
+
+        _log.info("Loading %s groups from %s" % (group_type, settings.base))
+        obj_def = ObjectDef(schema = _ldap, object_class = settings.objectclass)
+        reader = Reader(connection = _ldap,
+                base = settings.base,
+                object_def = obj_def,
+                sub_tree = sub(settings))
+
+        entries = reader.search_paged(paged_size = _page_size, attributes = attrs)
+        for entry in entries:
+            group = cls(entry, settings)
+            groups.append(group)
+
+        return groups
+
+class AttributalGroup(Group):
+    def __init__(self, entry, settings):
+        name = entry[settings.attr.name]
+        super().__init__(name)
+
+        for json_vars in entry[settings.attr.var].values:
+            self._vars.update(json.loads(json_vars))
+
         self._keys = entry[settings.attr.host].values
 
-    def keys(self):
+    def __iter__(self):
         return iter(self._keys)
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
-        super().__init__(entry, settings)
+        name = entry[settings.attr.name]
+        super().__init__(name)
 
-        self._groups = set()
+        for json_vars in entry[settings.attr.var].values:
+            self._vars.update(json.loads(json_vars))
 
     def add_group(self, group):
         self._groups.add(group)
+
+    @classmethod
+    def from_entry(cls, entry, settings):
+        name = entry[settings.attr.name]
+        for json_vars in entry[settings.attr.var].values:
+            group._vars.update(json.loads(json_vars))
 
 class Inventory:
     def __init__(self):
         self._tree = LdapTree()
         (self._hosts_by_name, self._hosts_by_dn) = Host.load_all()
+
+        self._groups = []
+        for settings in _cfg.groups:
+            cfg = Config(settings)
+            self._groups.extend( Group.from_settings(cfg) )

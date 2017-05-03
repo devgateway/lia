@@ -59,9 +59,7 @@ class LdapTree:
             self._petrify()
             self.__petrified = True
 
-        for node in self.__nodes_with_data:
-            if node.toplevel:
-                yield node
+        return iter(self.__nodes_with_data)
 
     def _petrify(self):
         for node in self.__nodes_with_data:
