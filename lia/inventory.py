@@ -5,13 +5,12 @@ from ldap3.utils.dn import safe_rdn
 
 from .connection import ldap_connect
 from .config import get_config, MissingConfigValue
+from .tree import LdapTree
 
 _log = logging.getLogger(__name__)
 
 _ldap = ldap_connect()
 _cfg = get_config()
-_host_attr_name = _cfg.hosts.attr.name
-_host_attr_vars = _cfg.hosts.attr.var
 
 def batch(items, batch_size = 2000):
     length = len(items)
@@ -63,17 +62,62 @@ class DNsNotFoundError(NotFoundError):
     def __str__(self):
         return "DNs not found:\n" + "\n".join(self.items)
 
-class Host:
+class Host():
+    __def = ObjectDef(schema = _ldap, object_class = _cfg.hosts.objectclass)
+    # attributes to request from LDAP
+    __attr_name = _cfg.hosts.attr.name
+    __attr_vars = _cfg.hosts.attr.var
+    __attr = [__attr_name, __attr_vars]
+    __base = _cfg.hosts.base
+
+    @classmethod
+    def get_one(cls, name):
+        try:
+            sub = _cfg.hosts.scope.lower() == "sub"
+        except MissingConfigValue:
+            sub = True
+
+        reader = Reader(connection = _ldap,
+                query = cls.__attr_name + ":" + name,
+                base = cls.__base,
+                object_def = cls.__def,
+                sub_tree = sub)
+
+        entries = reader.search(attributes = cls.__attr)
+        return cls(entries[0])
+
+    @classmethod
+    def load_all(cls):
+        by_name = {}
+        by_dn = {}
+
+        try:
+            size = _cfg.page
+        except MissingConfigValue:
+            size = 100
+
+        reader = Reader(connection = _ldap,
+                base = cls.__base,
+                object_def = cls.__def,
+                sub_tree = sub)
+
+        entries = reader.search_paged(paged_size = size,
+                attributes = cls.__attr)
+        for entry in entries:
+            host = cls(entry)
+            by_name[host.name] = host
+            by_dn[host.dn] = host
+
     def __init__(self, entry):
         self.dn = entry.entry_dn
 
         # select a consistent name value, if there are several
-        self.name = entry_name(entry, _host_attr_name)
+        self.name = entry_name(entry, __class__.__attr_name)
 
         # parse vars values
         self.vars = {}
-        for val in entry[_host_attr_vars].values:
-            self.vars.update(json.loads(val))
+        for json_vars in entry[__class__.__attr_vars].values:
+            self.vars.update( json.loads(json_vars) )
 
     def __repr__(self):
         return json.dumps(self.vars, indent = 2)
@@ -81,14 +125,13 @@ class Host:
     def __str__(self):
         return self.name
 
-class Group:
+class Group():
     def __init__(self, entry, settings):
         self._hosts = set()
-        self._children = set()
         self._name = entry_name(entry, settings.attr.name)
         self._vars = {}
-        for val in entry[settings.attr.var].values:
-            self.vars.update(json.loads(val))
+        for json_vars in entry[settings.attr.var].values:
+            self.vars.update(json.loads(json_vars))
 
     def __str__(self):
         return self._name
@@ -97,110 +140,18 @@ class AttributalGroup(Group):
     def __init__(self, entry, settings, inventory):
         super().__init__(entry, settings)
 
-        children = entry[settings.attr.host].values
+        hosts = entry[settings.attr.host].values
         if settings.attr.host_is_dn:
-            self._children = inventory.add_hosts_by_dn(children)
+            self._hosts = inventory.add_hosts_by_dn(hosts)
         else:
-            self._children = inventory.add_hosts_by_name(children)
+            self._hosts = inventory.add_hosts_by_name(hosts)
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
         super().__init__(entry, settings)
 
+        self._children = set()
+
 class Inventory:
-    _host_def = ObjectDef(schema = _ldap,
-            object_class = _cfg.hosts.objectclass)
-    # attributes to request from LDAP
-    _host_attr = [_host_attr_name, _host_attr_vars]
-
-    def __init__(self, host_name = None):
-        self._hosts_by_name = {}
-        self._hosts_by_dn = {}
-        self._host_names = set()
-        self._host_dns = set()
-
-        if host_name:
-            # only add one host, and exit (host mode)
-            self.add_hosts_by_name([host_name])
-        else:
-            # add all groups and hosts (list mode)
-            self._load_groups
-
-    def __iter__(self):
-        yield from self._hosts_by_dn.values()
-
-    def _add_host(self, entry):
-        """Add host object to internal indexes."""
-
-        host = Host(entry)
-
-        name = host.name
-        dn = host.dn
-        self._hosts_by_name[name] = host
-        self._hosts_by_dn[dn] = host
-        self._host_names.add(name)
-        self._host_dns.add(dn)
-
-        return host
-
-    def add_hosts_by_name(self, names):
-        """Load hosts by common names."""
-
-        try:
-            sub = _cfg.hosts.scope.lower() == "sub"
-        except MissingConfigValue:
-            sub = True
-
-        try:
-            size = _cfg.page
-        except MissingConfigValue:
-            size = 100
-
-        names = set(names)
-        new_names = names - self._host_names
-        existing_names = names & self._host_names
-        found = set()
-        all_hosts = set()
-
-        for hosts in batch(list(new_names)):
-            query = _cfg.hosts.attr.name + ":" + ";".join(hosts)
-
-            reader = Reader(connection = _ldap,
-                    query = query,
-                    base = _cfg.hosts.base,
-                    object_def = __class__._host_def,
-                    sub_tree = sub)
-
-            entries = reader.search_paged(attributes = __class__._host_attr, paged_size = size)
-            for entry in entries:
-                host = self._add_host(entry)
-                found.add(host.name)
-                all_hosts.add(host)
-
-        missing = new_names - found
-        if missing:
-            raise NamesNotFoundError(missing)
-
-        for name in existing_names:
-            all_hosts.add(self._hosts_by_name[name])
-
-        return all_hosts
-
-    def add_hosts_by_dn(self, dns):
-        """Load hosts by DN."""
-
-        all_hosts = set()
-        for dn in dns:
-            reader = Reader(connection = _ldap,
-                    base = dn,
-                    object_def = __class__._host_def,
-                    sub_tree = False)
-            entries = reader.search_object(attributes = __class__._host_attr)
-
-            if entries:
-                host = self._add_host(entries[0])
-                all_hosts.add(host)
-            else:
-                raise DNsNotFoundError([dn])
-
-        return all_hosts
+    def __init__(self):
+        pass
