@@ -72,6 +72,8 @@ class Host():
 
     @classmethod
     def get_one(cls, name):
+        """Fetch a single host (inventory host mode)."""
+
         try:
             sub = _cfg.hosts.scope.lower() == "sub"
         except MissingConfigValue:
@@ -140,11 +142,11 @@ class AttributalGroup(Group):
     def __init__(self, entry, settings, inventory):
         super().__init__(entry, settings)
 
-        hosts = entry[settings.attr.host].values
-        if settings.attr.host_is_dn:
-            self._hosts = inventory.add_hosts_by_dn(hosts)
-        else:
-            self._hosts = inventory.add_hosts_by_name(hosts)
+        self.want_dn = settings.attr.host_is_dn
+        self._keys = entry[settings.attr.host].values
+
+    def keys(self):
+        return iter(self._keys)
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
