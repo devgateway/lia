@@ -1,9 +1,16 @@
 from ldap3.utils.dn import parse_dn
 
+class NodeNotEmptyError(Exception):
+    def __init__(self, path):
+        self.dn = ",".join(reversed(path))
+
+    def __str__(self):
+        return "Node already added: " + self.dn
+
 class LdapNode:
-    def __init__(self, name = None, data = None):
+    def __init__(self, parent, name, data):
         self.name = name
-        self.parent_node = None
+        self.parent = parent
         self.child_nodes = set()
         self.data = data
 
@@ -19,17 +26,17 @@ class LdapNode:
 
 class LdapTree:
     def __init__(self):
-        self._top = LdapNode()
+        self._top = LdapNode(name = None, data = None)
         self._all = set()
 
-    def add_node(self, path, data):
+    def add_node(self, dn, data):
         node = self._top
 
         for name in reversed(path):
             node = node.get_child(name)
 
         if node.data:
-            raise ValueError("Node not empty")
+            raise NodeNotEmptyError(path)
         else:
             node.data = data
 
@@ -38,6 +45,8 @@ class LdapTree:
 
     @staticmethod
     def _dn_to_path(dn):
+        """Split DN into top-down normalized node names."""
+
         path = []
         rdn = []
 
@@ -48,4 +57,4 @@ class LdapTree:
                 path.append( "+".join(sorted(rdn)) )
                 rdn.clear()
 
-        return path
+        return reversed(path)
