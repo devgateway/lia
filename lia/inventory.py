@@ -12,13 +12,6 @@ _log = logging.getLogger(__name__)
 _ldap = ldap_connect()
 _cfg = get_config()
 
-def batch(items, batch_size = 2000):
-    length = len(items)
-    _log.debug("Grouping %i items in batches of %i" % (length, batch_size))
-    for start in range(0, length, batch_size):
-        end = start + batch_size
-        yield items[start:end]
-
 def entry_name(entry, name_attr):
     """Return consistent scalar entry common name."""
 
