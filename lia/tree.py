@@ -14,8 +14,8 @@ class TreePetrifiedError(Exception):
 class LdapNode:
     def __init__(self, parent):
         self.parent = parent
-        self.leaves = {}
-        self.children = None
+        self.children = {}
+        self.descendants = None
         self.data = None
         self.toplevel = True # TBD
 
@@ -25,11 +25,11 @@ class LdapTree:
         self.__nodes_with_data = set()
         self.__petrified = False
 
-    def add_node(self, dn, data):
+    def _add_node(self, data):
         if self.__petrified:
             raise TreePetrifiedError()
 
-        path = _dn_to_path(dn)
+        path = __class__._dn_to_path(data.dn)
         # start from top node
         node = self.__top
         toplevel = True
@@ -37,11 +37,11 @@ class LdapTree:
         for name in path:
             # select or create each node in path
             try:
-                node = node.leaves[name]
+                node = node.children[name]
             except KeyError:
                 parent = node
                 node = LdapNode(parent = parent)
-                parent.leaves[name] = node
+                parent.children[name] = node
 
             # if any parent has data, child is definitely not top level
             if node.data:
@@ -54,10 +54,16 @@ class LdapTree:
             node.toplevel = toplevel
             self.__nodes_with_data.add(node)
 
+        return node
+
+    def add_node(self, data, is_leaf):
+        node = self._add_node(data)
+        if not is_leaf:
+            node.descendants = set()
+
     def __iter__(self):
         if not self.__petrified:
             self._petrify()
-            self.__petrified = True
 
         return iter(self.__nodes_with_data)
 
@@ -70,19 +76,14 @@ class LdapTree:
                 while True:
                     if parent == self.__top: # no parents found
                         break
-                    elif parent.data: # found the parent
+                    elif parent.data and parent.descendants is not None: # found the parent
                         node.toplevel = False
-
-                        try:
-                            parent.children.add(node)
-                        except AttributeError:
-                            parent.children = set()
-                            parent.children.add(node)
-
+                        parent.descendants.add(node)
                         break
-
                     else: # continue traversing
                         parent = node.parent
+
+        self.__petrified = True
 
     @staticmethod
     def _dn_to_path(dn):

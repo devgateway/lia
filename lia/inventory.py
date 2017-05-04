@@ -73,7 +73,7 @@ class Host():
     __attr_name = _cfg.hosts.attr.name
     __attr_vars = _cfg.hosts.attr.var
     __attr = [__attr_name, __attr_vars]
-    __base = _cfg.hosts.base
+    base = _cfg.hosts.base
 
     @classmethod
     def get_one(cls, name):
@@ -81,7 +81,7 @@ class Host():
 
         reader = Reader(connection = _ldap,
                 query = cls.__attr_name + ":" + name,
-                base = cls.__base,
+                base = cls.base,
                 object_def = cls.__def,
                 sub_tree = sub(_cfg.hosts))
 
@@ -94,7 +94,7 @@ class Host():
         by_dn = {}
 
         reader = Reader(connection = _ldap,
-                base = cls.__base,
+                base = cls.base,
                 object_def = cls.__def,
                 sub_tree = sub(_cfg.hosts))
 
@@ -105,6 +105,7 @@ class Host():
             by_name[host.name] = host
             by_dn[host.dn] = host
 
+        _log.info("Loaded %i hosts" % len(by_dn))
         return (by_name, by_dn)
 
     def __init__(self, entry):
@@ -125,31 +126,35 @@ class Host():
         return self.name
 
 class Group():
-    def __init__(self, name):
-        self._hosts = set()
+    __ungrouped = None
+
+    def __init__(self, name, var_array):
+        self.hosts = set()
         self._name = name
         self._vars = {}
+        self.dn = None
+        for json_vars in var_array:
+            self._vars.update( json.loads(json_vars) )
 
     def __str__(self):
         return self._name
 
     def add_host(self, host):
-        self._hosts.add(host)
+        self.hosts.add(host)
 
-    @staticmethod
-    def from_settings(settings):
+    @classmethod
+    def from_settings(cls, settings):
         groups = []
 
         attrs = [settings.attr.name, settings.attr.var]
         try:
             attrs.append(settings.attr.host)
-            want_dn = settings.attr.host_is_dn
             group_type = "attributal"
-            cls = AttributalGroup
+            new_cls = AttributalGroup
         except MissingConfigValue:
             host_attr = None
             group_type = "structural"
-            cls = StructuralGroup
+            new_cls = StructuralGroup
 
         _log.info("Loading %s groups from %s" % (group_type, settings.base))
         obj_def = ObjectDef(schema = _ldap, object_class = settings.objectclass)
@@ -160,47 +165,74 @@ class Group():
 
         entries = reader.search_paged(paged_size = _page_size, attributes = attrs)
         for entry in entries:
-            group = cls(entry, settings)
+            group = new_cls(entry, settings)
+            group.dn = entry.entry_dn
+            if group.dn == Host.base:
+                # if host base itself is a group, read its vars
+                _log.debug("Found root group at " + group.dn)
+                cls.__ungrouped = group
+
+            try:
+                group._want_dn = settings.attr.host_is_dn
+            except MissingConfigValue:
+                pass
             groups.append(group)
 
+        _log.info("Loaded %i groups" % len(groups))
         return groups
+
+    @classmethod
+    def get_default_group(cls):
+        if not cls.__ungrouped:
+            _log.debug("Creating a default group for ungrouped hosts")
+            cls.__ungrouped = __class__(name = None, var_array = {})
+
+        cls.__ungrouped.name = "ungrouped"
+        return cls.__ungrouped
 
 class AttributalGroup(Group):
     def __init__(self, entry, settings):
-        name = entry[settings.attr.name]
-        super().__init__(name)
+        super().__init__(name = entry[settings.attr.name],
+                var_array = entry[settings.attr.var].values)
+        self._host_keys = entry[settings.attr.host].values
+        self._want_dn = None
 
-        for json_vars in entry[settings.attr.var].values:
-            self._vars.update(json.loads(json_vars))
+    def populate_group(self, by_name, by_dn):
+        if self._want_dn:
+            host_dict = by_dn
+        else:
+            host_dict = by_name
 
-        self._keys = entry[settings.attr.host].values
-
-    def __iter__(self):
-        return iter(self._keys)
+        for key in self._host_keys:
+            try:
+                self.add_host(host_dict[key])
+            except KeyError:
+                _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
-        name = entry[settings.attr.name]
-        super().__init__(name)
-
-        for json_vars in entry[settings.attr.var].values:
-            self._vars.update(json.loads(json_vars))
-
-    def add_group(self, group):
-        self._groups.add(group)
-
-    @classmethod
-    def from_entry(cls, entry, settings):
-        name = entry[settings.attr.name]
-        for json_vars in entry[settings.attr.var].values:
-            group._vars.update(json.loads(json_vars))
+        super().__init__(name = entry[settings.attr.name],
+                var_array = entry[settings.attr.var].values)
 
 class Inventory:
     def __init__(self):
         self._tree = LdapTree()
         (self._hosts_by_name, self._hosts_by_dn) = Host.load_all()
+        unclaimed_hosts = set(self._hosts_by_dn.values())
 
-        self._groups = []
         for settings in _cfg.groups:
             cfg = Config(settings)
-            self._groups.extend( Group.from_settings(cfg) )
+            groups = Group.from_settings(cfg)
+            for group in groups:
+                self._tree.add_node(group, is_leaf = False)
+
+        for node in self._tree:
+            obj = node.data
+            if isinstance(obj, Group):
+                try:
+                    obj.populate_group(self._hosts_by_name, self._hosts_by_dn)
+                except AttributeError:
+                    obj.add_children(node.descendants)
+
+                for host in obj.hosts:
+                    unclaimed_hosts.remove(host)
