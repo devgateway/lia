@@ -129,7 +129,7 @@ class Group():
     __ungrouped = None
 
     def __init__(self, name, var_array):
-        self.hosts = set()
+        self._hosts = set()
         self._name = name
         self._vars = {}
         self.dn = None
@@ -140,7 +140,31 @@ class Group():
         return self._name
 
     def add_host(self, host):
-        self.hosts.add(host)
+        self._hosts.add(host)
+
+    @classmethod
+    def load_all(cls, hosts_by_name, hosts_by_dn):
+        tree = LdapTree()
+        unclaimed_hosts = set(hosts_by_dn.values())
+        # TODO: "ungrouped", "all", and host base logic
+        all_hosts = set(hosts_by_dn.values())
+
+        for settings in _cfg.groups:
+            groups = cls.from_settings( Config(settings) )
+            for group in groups:
+                tree.add_node(group, is_leaf = False)
+
+        for host in hosts_by_dn.values():
+            tree.add_node(host, is_leaf = True)
+
+        for branch in self._tree:
+            group = branch.data
+            try:
+                group.populate_group(self._hosts_by_name, self._hosts_by_dn)
+            except AttributeError:
+                group.add_children(branch.descendants)
+
+            unclaimed_hosts -= group._hosts
 
     @classmethod
     def from_settings(cls, settings):
@@ -216,23 +240,5 @@ class StructuralGroup(Group):
 
 class Inventory:
     def __init__(self):
-        self._tree = LdapTree()
         (self._hosts_by_name, self._hosts_by_dn) = Host.load_all()
-        unclaimed_hosts = set(self._hosts_by_dn.values())
-
-        for settings in _cfg.groups:
-            cfg = Config(settings)
-            groups = Group.from_settings(cfg)
-            for group in groups:
-                self._tree.add_node(group, is_leaf = False)
-
-        for node in self._tree:
-            obj = node.data
-            if isinstance(obj, Group):
-                try:
-                    obj.populate_group(self._hosts_by_name, self._hosts_by_dn)
-                except AttributeError:
-                    obj.add_children(node.descendants)
-
-                for host in obj.hosts:
-                    unclaimed_hosts.remove(host)
+        groups = Group.load_all(self._hosts_by_name, self._hosts_by_dn)

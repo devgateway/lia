@@ -23,6 +23,7 @@ class LdapTree:
     def __init__(self):
         self.__top = LdapNode(parent = None)
         self.__nodes_with_data = set()
+        self.__branches = set()
         self.__petrified = False
 
     def _add_node(self, data):
@@ -60,12 +61,13 @@ class LdapTree:
         node = self._add_node(data)
         if not is_leaf:
             node.descendants = set()
+            self.__branches.add(node)
 
     def __iter__(self):
         if not self.__petrified:
             self._petrify()
 
-        return iter(self.__nodes_with_data)
+        return iter(self.__branches)
 
     def _petrify(self):
         for node in self.__nodes_with_data:
