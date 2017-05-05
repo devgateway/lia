@@ -1,4 +1,8 @@
+import logging
+
 from ldap3.utils.dn import parse_dn
+
+_log = logging.getLogger(__name__)
 
 class NodeNotEmptyError(Exception):
     def __init__(self, path):
@@ -70,21 +74,27 @@ class LdapTree:
         return iter(self.__branches)
 
     def _petrify(self):
+        _log.debug("Analyzing tree structure")
         for node in self.__nodes_with_data:
+            _log.debug( "Analyzing node %i, %s" % (id(node), repr(node.data)) )
             if node.toplevel:
                 # try to prove it by traversing the tree upwards
                 # and looking for possible parent
                 parent = node.parent
                 while True:
+                    _log.debug("Examining parent %i" % id(parent))
                     if parent == self.__top: # no parents found
+                        _log.debug("Node %i is top" % id(parent))
                         break
                     elif parent.data and parent.descendants is not None: # found the parent
+                        _log.debug("Node %i is my parent" % id(parent))
                         node.toplevel = False
                         parent.descendants.add(node)
                         break
                     else: # continue traversing
-                        parent = node.parent
+                        parent = parent.parent
 
+        _log.debug("Done analyzing tree structure")
         self.__petrified = True
 
     @staticmethod
