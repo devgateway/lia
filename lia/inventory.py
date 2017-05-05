@@ -6,6 +6,7 @@ from ldap3.utils.dn import safe_rdn
 from .connection import ldap_connect
 from .config import get_config, MissingConfigValue, Config
 from .tree import LdapTree
+from .cache import CacheExpiredError, load_cached, cache_data
 
 _log = logging.getLogger(__name__)
 
@@ -292,23 +293,33 @@ class StructuralGroup(Group):
 
 class Inventory:
     def __init__(self):
+        try:
+            self._data = load_cached()
+        except CacheExpiredError:
+            self._data = self._load_from_ldap()
+
+    def _load_from_ldap(self):
+        data = {}
+
         (hosts_by_name, hosts_by_dn) = Host.load_all()
         groups = Group.load_all(hosts_by_name, hosts_by_dn)
-
-        self._data = {}
 
         for group in groups:
             group_data = group.get_data()
             if group_data:
-                self._data[group.name] = group_data
+                data[group.name] = group_data
 
         hostvars = {}
-        self._data["_meta"] = {"hostvars": hostvars}
+        data["_meta"] = {"hostvars": hostvars}
 
         for name, host in hosts_by_name.items():
             host_data = host.get_data()
             if host_data:
                 hostvars[name] = host_data
+
+        cache_data(data)
+
+        return data
 
     def __repr__(self):
         return __class__.encode(self._data)
