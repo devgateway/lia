@@ -119,6 +119,9 @@ class Host():
         for json_vars in entry[__class__.__attr_vars].values:
             self.vars.update( json.loads(json_vars) )
 
+    def get_data(self):
+        return self.vars
+
     def __str__(self):
         return "Host %s" % self.name
 
@@ -135,6 +138,17 @@ class Group():
 
     def __str__(self):
         return "Group %s" % self.name
+
+    def get_data(self):
+        data = {}
+
+        if self._hosts:
+            data["hosts"] = [host.name for host in self._hosts]
+
+        if self._vars:
+            data["vars"] = self._vars
+
+        return data
 
     @classmethod
     def load_all(cls, hosts_by_name, hosts_by_dn):
@@ -263,7 +277,37 @@ class StructuralGroup(Group):
     def __str__(self):
         return "Structural group '%s'" % self.name
 
+    def get_data(self):
+        data = super(__class__, self).get_data()
+
+        if self._groups:
+            data["children"] = [child.name for child in self._groups]
+
+        return data
+
 class Inventory:
     def __init__(self):
-        (self._hosts_by_name, self._hosts_by_dn) = Host.load_all()
-        groups = Group.load_all(self._hosts_by_name, self._hosts_by_dn)
+        (hosts_by_name, hosts_by_dn) = Host.load_all()
+        groups = Group.load_all(hosts_by_name, hosts_by_dn)
+
+        self._data = {}
+
+        for group in groups:
+            group_data = group.get_data()
+            if group_data:
+                self._data[group.name] = group_data
+
+        hostvars = {}
+        self._data["_meta"] = {"hostvars": hostvars}
+
+        for name, host in hosts_by_name.items():
+            host_data = host.get_data()
+            if host_data:
+                hostvars[name] = host_data
+
+    def __repr__(self):
+        return __class__.encode(self._data)
+
+    @staticmethod
+    def encode(data):
+        return json.dumps(data, indent = 2)

@@ -36,10 +36,11 @@ def main():
     if args.list:
         log.debug("Requested the whole inventory")
         inventory = Inventory()
+        print( repr(inventory) )
     else:
         log.debug("Requested vars for host " + args.host)
         host = Host.get_one(args.host)
-        print(repr(host))
+        print( Inventory.encode( host.get_data() ) )
 
 if __name__ == "__main__":
     main()
