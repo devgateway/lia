@@ -120,7 +120,7 @@ class Host():
             self.vars.update( json.loads(json_vars) )
 
     def __repr__(self):
-        return "Host %s, DN %s" % (self.name, self.dn)
+        return "Host %s" % self.name
 
     def __str__(self):
         return self.name
@@ -141,7 +141,7 @@ class Group():
         return self._name
 
     def __repr__(self):
-        return "Group %s, DN %s" % (self._name, self.dn)
+        return "Group %s" % self._name
 
     @classmethod
     def load_all(cls, hosts_by_name, hosts_by_dn):
@@ -216,7 +216,7 @@ class Group():
 
 class AttributalGroup(Group):
     def __init__(self, entry, settings):
-        super().__init__(name = entry[settings.attr.name],
+        super().__init__(name = entry[settings.attr.name].value,
                 var_array = entry[settings.attr.var].values)
         self._host_keys = entry[settings.attr.host].values
         self._want_dn = None
@@ -232,30 +232,30 @@ class AttributalGroup(Group):
                 self._hosts.add(host_dict[key])
             except KeyError:
                 _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
-        msg = "Attributal group %s has %i hosts" % ( self._name, len(self._hosts) )
+        msg = "%s: %i hosts" % (repr(self), len(self._hosts))
         _log.debug(msg)
 
     def __repr__(self):
-        return "Attributal group %s, DN %s" % (self._name, self.dn)
+        return "Attributal group '%s'" % self._name
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
-        super().__init__(name = entry[settings.attr.name],
+        super().__init__(name = entry[settings.attr.name].value,
                 var_array = entry[settings.attr.var].values)
         self._groups = set()
 
     def add_children(self, children):
         for child in children:
-            if isinstance(child, Group):
-                self._groups.add(child)
+            if isinstance(child.data, Group):
+                self._groups.add(child.data)
             else:
-                self._hosts.add(child)
-        msg = "Structural group %s has %i subgroups and %i hosts" % (
-                self._name, len(self._groups), len(self._hosts))
+                self._hosts.add(child.data)
+        msg = "%s: %i groups, %i hosts" % (
+                repr(self), len(self._groups), len(self._hosts) )
         _log.debug(msg)
 
     def __repr__(self):
-        return "Structural group %s, DN %s" % (self._name, self.dn)
+        return "Structural group '%s'" % self._name
 
 class Inventory:
     def __init__(self):

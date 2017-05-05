@@ -21,7 +21,6 @@ class LdapNode:
         self.children = {}
         self.descendants = None
         self.data = None
-        self.toplevel = True # TBD
 
 class LdapTree:
     def __init__(self):
@@ -37,7 +36,6 @@ class LdapTree:
         path = __class__._dn_to_path(data.dn)
         # start from top node
         node = self.__top
-        toplevel = True
         # descend to destination
         for name in path:
             # select or create each node in path
@@ -48,15 +46,10 @@ class LdapTree:
                 node = LdapNode(parent = parent)
                 parent.children[name] = node
 
-            # if any parent has data, child is definitely not top level
-            if node.data:
-                toplevel = False
-
         if node.data:
             raise NodeNotEmptyError(path)
         else:
             node.data = data
-            node.toplevel = toplevel
             self.__nodes_with_data.add(node)
 
         return node
@@ -76,23 +69,16 @@ class LdapTree:
     def _petrify(self):
         _log.debug("Analyzing tree structure")
         for node in self.__nodes_with_data:
-            _log.debug( "Analyzing node %i, %s" % (id(node), repr(node.data)) )
-            if node.toplevel:
-                # try to prove it by traversing the tree upwards
-                # and looking for possible parent
-                parent = node.parent
-                while True:
-                    _log.debug("Examining parent %i" % id(parent))
-                    if parent == self.__top: # no parents found
-                        _log.debug("Node %i is top" % id(parent))
-                        break
-                    elif parent.data and parent.descendants is not None: # found the parent
-                        _log.debug("Node %i is my parent" % id(parent))
-                        node.toplevel = False
-                        parent.descendants.add(node)
-                        break
-                    else: # continue traversing
-                        parent = parent.parent
+            # traverse the tree upwards and look for possible parent
+            parent = node.parent
+            while True:
+                if parent == self.__top: # no parents found
+                    break
+                elif parent.data and parent.descendants is not None: # found the parent
+                    parent.descendants.add(node)
+                    break
+                else: # continue traversing
+                    parent = parent.parent
 
         _log.debug("Done analyzing tree structure")
         self.__petrified = True
