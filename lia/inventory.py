@@ -222,6 +222,11 @@ class Group():
             cls.__ungrouped = ungrouped
             all_groups.add(ungrouped)
         ungrouped._hosts |= ungrouped_hosts
+        # 'ungrouped' can't have child groups
+        try:
+            ungrouped._groups.clear()
+        except AttributeError:
+            pass
         _log.debug( "%i hosts ungrouped" % len(ungrouped._hosts) )
 
         # move ungrouped vars to special group 'all'
