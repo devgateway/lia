@@ -1,3 +1,6 @@
+# Copyright 2017, Development Gateway, Inc.
+# This file is part of lia, see COPYING.
+
 import logging, os, json
 from time import time
 
