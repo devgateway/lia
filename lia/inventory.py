@@ -119,13 +119,12 @@ class Host():
         for json_vars in entry[__class__.__attr_vars].values:
             self.vars.update( json.loads(json_vars) )
 
-    def __repr__(self):
+    def __str__(self):
         return "Host %s" % self.name
 
-    def __str__(self):
-        return self.name
-
 class Group():
+    __ungrouped = None
+
     def __init__(self, name, var_array):
         self._hosts = set()
         self.name = name
@@ -135,9 +134,6 @@ class Group():
             self._vars.update( json.loads(json_vars) )
 
     def __str__(self):
-        return self.name
-
-    def __repr__(self):
         return "Group %s" % self.name
 
     @classmethod
@@ -169,7 +165,7 @@ class Group():
                 if group.dn == Host.base:
                     # if host base itself is a group, read its vars
                     _log.debug("Found root group at " + group.dn)
-                    cls.__all = group
+                    cls.__ungrouped = group
 
                 try:
                     group._want_dn = settings.attr.host_is_dn
@@ -180,18 +176,9 @@ class Group():
             _log.info("Loaded %i groups" % len(groups))
             return groups
 
-        def get_default_group():
-            if not cls.__ungrouped:
-                _log.debug("Creating a default group for ungrouped hosts")
-                cls.__ungrouped = __class__(name = None, var_array = {})
-
-            cls.__ungrouped.name = "ungrouped"
-            return cls.__ungrouped
-
         tree = LdapTree()
-        unclaimed_hosts = set(hosts_by_dn.values())
-        # TODO: "ungrouped", "all", and host base logic
-        all_hosts = set(hosts_by_dn.values())
+        ungrouped_hosts = set(hosts_by_dn.values())
+        all_groups = set()
 
         for settings in _cfg.groups:
             groups = load_groups( Config(settings) )
@@ -203,13 +190,35 @@ class Group():
 
         for branch in tree:
             group = branch.data
+            all_groups.add(group)
             try:
                 group.populate_group(hosts_by_name, hosts_by_dn)
             except AttributeError:
                 group.add_children(branch.descendants)
 
-            unclaimed_hosts -= group._hosts
-        _log.debug("%i hosts left ungrouped" % len(unclaimed_hosts))
+            ungrouped_hosts -= group._hosts
+
+        # update or create special group 'ungrouped'
+        # 'ungrouped' may contain hosts, but no vars
+        try:
+            cls.__ungrouped.name = "ungrouped"
+            ungrouped = cls.__ungrouped
+        except AttributeError:
+            ungrouped = cls(name = "ungrouped", var_array = [])
+            cls.__ungrouped = ungrouped
+            all_groups.add(ungrouped)
+        ungrouped._hosts |= ungrouped_hosts
+        _log.debug( "%i hosts ungrouped" % len(ungrouped._hosts) )
+
+        # move ungrouped vars to special group 'all'
+        # 'all' may contain vars, but no hosts
+        if ungrouped._vars:
+            all = cls(name = "all", var_array = [])
+            all._vars = ungrouped._vars
+            ungrouped._vars = {}
+            all_groups.add(all)
+
+        return all_groups
 
 class AttributalGroup(Group):
     def __init__(self, entry, settings):
@@ -229,10 +238,10 @@ class AttributalGroup(Group):
                 self._hosts.add(host_dict[key])
             except KeyError:
                 _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
-        msg = "%s: %i hosts" % (repr(self), len(self._hosts))
+        msg = "%s: %i hosts" % (str(self), len(self._hosts))
         _log.debug(msg)
 
-    def __repr__(self):
+    def __str__(self):
         return "Attributal group '%s'" % self.name
 
 class StructuralGroup(Group):
@@ -248,10 +257,10 @@ class StructuralGroup(Group):
             else:
                 self._hosts.add(child.data)
         msg = "%s: %i groups, %i hosts" % (
-                repr(self), len(self._groups), len(self._hosts) )
+                str(self), len(self._groups), len(self._hosts) )
         _log.debug(msg)
 
-    def __repr__(self):
+    def __str__(self):
         return "Structural group '%s'" % self.name
 
 class Inventory:
