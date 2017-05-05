@@ -126,22 +126,19 @@ class Host():
         return self.name
 
 class Group():
-    __ungrouped = None
-    __all = None
-
     def __init__(self, name, var_array):
         self._hosts = set()
-        self._name = name
+        self.name = name
         self._vars = {}
         self.dn = None
         for json_vars in var_array:
             self._vars.update( json.loads(json_vars) )
 
     def __str__(self):
-        return self._name
+        return self.name
 
     def __repr__(self):
-        return "Group %s" % self._name
+        return "Group %s" % self.name
 
     @classmethod
     def load_all(cls, hosts_by_name, hosts_by_dn):
@@ -236,7 +233,7 @@ class AttributalGroup(Group):
         _log.debug(msg)
 
     def __repr__(self):
-        return "Attributal group '%s'" % self._name
+        return "Attributal group '%s'" % self.name
 
 class StructuralGroup(Group):
     def __init__(self, entry, settings):
@@ -255,7 +252,7 @@ class StructuralGroup(Group):
         _log.debug(msg)
 
     def __repr__(self):
-        return "Structural group '%s'" % self._name
+        return "Structural group '%s'" % self.name
 
 class Inventory:
     def __init__(self):
