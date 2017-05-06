@@ -320,7 +320,10 @@ class Inventory:
             if host_data:
                 hostvars[name] = host_data
 
-        cache_data(data)
+        try:
+            cache_data(data)
+        except:
+            pass
 
         return data
 
