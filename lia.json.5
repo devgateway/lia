@@ -29,7 +29,7 @@ request.
 .B groups
 A list of dictionaries, each defining how to search for groups, which
 attributes to request, and how to interpret host membership.
-.SS "\fBhosts\fR members"
+.SS "Members of hosts dictionary"
 .TP
 .B base
 The node in LDAP, from which the search starts.
@@ -91,4 +91,27 @@ cn: alpha
 Host name:
 alpha
 .RE
+.TP
+.B var
+The attribute that holds JSON-formatted variables.
+.RE
+.SS "Members of each element in groups list"
+.TP
+.BR base ", " scope ", " objectclass
+Group search criteria. See \fBMembers of hosts dictionary\fR above.
+.TP
+.B attr
+A dictionary describing attributes to request. The following members are
+required:
+.RS
+.TP
+.BR name ", " var
+Identical to the eponymous \fBhosts\fR members, see above.
+.TP
+.B host
+The attribute listing member hosts.
+.TP
+.B host_is_dn
+If \fBtrue\fR, then the attribute defined in \fBhost\fR lists distinguished
+names of the member hosts. Otherwise, it lists host names.
 .RE
