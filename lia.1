@@ -1,6 +1,28 @@
 .TH lia 1 "22 Feb 2018" "version 1.0"
 .SH NAME
 lia \- LDAP Inventory for Ansible
-Lia is a helper script to query hosts, groups, and variables from your
-LDAP server, and provide it to Ansible. Lia is highly configurable to
-support caching and adjust to any LDAP schema.
+.SH SYNOPSIS
+.B lia
+.RB [ \-h ]
+.RB ( \-\-list | \-\-host
+.IR HOST )
+.SH DESCRIPTION
+.B lia
+is a helper script to query hosts, groups, and variables from your LDAP
+server, and provide it to \fBansible\fR(1).
+.B lia
+is highly configurable to support caching and adjust to any LDAP schema.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show usage information, and exit.
+.TP
+.B \-\-list
+Print all groups and variables.
+.TP
+.BI \-\-host\  HOST
+Print variables for the host \fIHOST\fR.
+.SH SEE ALSO
+.UR http://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html
+Developing Dynamic Inventory Sources
+.UE
