@@ -1,0 +1,652 @@
+# Russian translations for lia package
+# Copyright (C) 2018 Free Software Foundation, Inc.
+# This file is distributed under the same license as the lia package.
+# Automatically generated, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: lia 1.0\n"
+"POT-Creation-Date: 2018-02-23 16:48-0500\n"
+"PO-Revision-Date: 2018-02-23 17:32-0500\n"
+"Last-Translator: Styopa Semenukha <ssemenukha@developmentgateway.org>\n"
+"Language-Team: Russian <>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<"
+"=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Lokalize 2.0\n"
+
+#. type: TH
+#: lia.1:1
+#, no-wrap
+msgid "lia"
+msgstr "lia"
+
+#. type: TH
+#: lia.1:1 lia.json.5:1
+#, no-wrap
+msgid "23 Feb 2018"
+msgstr "23 февраля 2018 г."
+
+#. type: TH
+#: lia.1:1 lia.json.5:1
+#, no-wrap
+msgid "version 1.0"
+msgstr "версия 1.0"
+
+#. type: SH
+#: lia.1:2 lia.json.5:2
+#, no-wrap
+msgid "NAME"
+msgstr "ИМЯ"
+
+#. type: Plain text
+#: lia.1:4
+msgid "lia - LDAP Inventory for Ansible"
+msgstr "lia - инвентарь для Ansible из LDAP"
+
+#. type: SH
+#: lia.1:4 lia.json.5:4
+#, no-wrap
+msgid "SYNOPSIS"
+msgstr "ОБЗОР"
+
+#. type: Plain text
+#: lia.1:9
+msgid "B<lia> [B<-h>] (B<--list>|B<--host> I<HOST>)"
+msgstr "B<lia> [B<-h>] (B<--list>|B<--host> I<ХОСТ>)"
+
+#. type: SH
+#: lia.1:9 lia.json.5:6
+#, no-wrap
+msgid "DESCRIPTION"
+msgstr "ОПИСАНИЕ"
+
+#. type: Plain text
+#: lia.1:15
+msgid ""
+"B<lia> is a helper script to query hosts, groups, and variables from your "
+"LDAP server, and provide it to B<ansible>(1).  B<lia> is highly configurable "
+"to support caching and adjust to any LDAP schema."
+msgstr ""
+"B<lia> это вспомогательный скрипт для чтения хостов, групп и переменных с"
+" сервера LDAP и предоставления их B<ansible>(1).  B<lia> отличается гибкой"
+" конфигурацией с поддержкой кэширования и адаптируется к любой схеме LDAP."
+
+#. type: Plain text
+#: lia.1:18
+msgid ""
+"The program will cache the inventory in JSON format, and serve it until the "
+"cache expires."
+msgstr ""
+"Программа кэширует инвентарь в формате JSON и читает из кэша, пока он не"
+" устареет."
+
+#. type: SH
+#: lia.1:18
+#, no-wrap
+msgid "OPTIONS"
+msgstr "ОПЦИИ"
+
+#. type: TP
+#: lia.1:19
+#, no-wrap
+msgid "B<-h>, B<--help>"
+msgstr "B<-h>, B<--help>"
+
+#. type: Plain text
+#: lia.1:22
+msgid "Show usage information, and exit."
+msgstr "Показать информацию об использовании и выйти."
+
+#. type: TP
+#: lia.1:22
+#, no-wrap
+msgid "B<--list>"
+msgstr "B<--list>"
+
+#. type: Plain text
+#: lia.1:25
+msgid "Print all groups and variables."
+msgstr "Вывести все группы и переменные."
+
+#. type: TP
+#: lia.1:25
+#, no-wrap
+msgid "B<--host\\ >I<HOST>"
+msgstr "B<--host\\ >I<ХОСТ>"
+
+#. type: Plain text
+#: lia.1:28
+msgid "Print variables for the host I<HOST>."
+msgstr "Вывести переменные для хоста I<ХОСТ>."
+
+#. type: SH
+#: lia.1:28
+#, no-wrap
+msgid "EXIT STATUS"
+msgstr "ВОЗВРАЩАЕМЫЕ ЗНАЧЕНИЯ"
+
+#. type: Plain text
+#: lia.1:30
+msgid "Returns zero if the inventory was retrieved."
+msgstr "Возвращает ноль, если инвентарь был прочитан."
+
+#. type: SH
+#: lia.1:30
+#, no-wrap
+msgid "ENVIRONMENT"
+msgstr "ОКРУЖЕНИЕ"
+
+#. type: TP
+#: lia.1:31
+#, no-wrap
+msgid "B<LOG_LEVEL>"
+msgstr "B<LOG_LEVEL>"
+
+#. type: Plain text
+#: lia.1:40
+msgid ""
+"Sets verbosity of logging sent to standard error.  Recognized levels are: "
+"B<CRITICAL>, B<ERROR>, B<WARNING> (default), B<INFO>, and B<DEBUG>."
+msgstr ""
+"Задаёт уровень журналирования, выводимого в стандартный вывод ошибок."
+" Доступные уровни: "
+"B<CRITICAL>, B<ERROR>, B<WARNING> (по умолчанию), B<INFO> и B<DEBUG>."
+
+#. type: SH
+#: lia.1:40
+#, no-wrap
+msgid "FILES"
+msgstr "ФАЙЛЫ"
+
+#. type: Plain text
+#: lia.1:41 lia.json.5:6
+#, no-wrap
+msgid "I<$XDG_CONFIG_HOME/lia.json>, I<~/.config/lia.json>"
+msgstr "I<$XDG_CONFIG_HOME/lia.json>, I<~/.config/lia.json>"
+
+#. type: Plain text
+#: lia.1:44
+msgid "Configuration file, see B<lia.json>(5)."
+msgstr "Файл настроек, см. B<lia.json>(5)."
+
+#. type: TP
+#: lia.1:44
+#, no-wrap
+msgid "I<$XDG_CACHE_HOME/lia.json>, I<~/.cache/lia.json>"
+msgstr "I<$XDG_CACHE_HOME/lia.json>, I<~/.cache/lia.json>"
+
+#. type: Plain text
+#: lia.1:47
+msgid "Cached inventory."
+msgstr "Закэшированный инвентарь."
+
+#. type: SH
+#: lia.1:47
+#, no-wrap
+msgid "CONFORMING TO"
+msgstr "СООТВЕТСТВИЕ СТАНДАРТАМ"
+
+#. type: IP
+#: lia.1:48 lia.1:52
+#, no-wrap
+msgid "\\(em"
+msgstr "\\(em"
+
+#. type: Plain text
+#: lia.1:52
+msgid ""
+"E<.UR "
+"http://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html> "
+"Developing Dynamic Inventory Sources E<.UE>"
+msgstr ""
+"E<.UR "
+"http://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html> "
+"Разработка динамических источников инвентаря E<.UE>"
+
+#. type: Plain text
+#: lia.1:56
+msgid ""
+"E<.UR "
+"https://specifications.freedesktop.org/basedir-spec/basedir-spec-0.6.html> "
+"XDG Base Directory Specification E<.UE>"
+msgstr ""
+"E<.UR "
+"https://specifications.freedesktop.org/basedir-spec/basedir-spec-0.6.html> "
+"Спецификация базового каталога XDG E<.UE>"
+
+#. type: SH
+#: lia.1:56 lia.json.5:159
+#, no-wrap
+msgid "SEE ALSO"
+msgstr "СМ. ТАКЖЕ"
+
+#. type: Plain text
+#: lia.1:58
+msgid "B<lia.json>(5), B<ansible>(1)"
+msgstr "B<lia.json>(5), B<ansible>(1)"
+
+#. type: TH
+#: lia.json.5:1
+#, no-wrap
+msgid "lia.json"
+msgstr "lia.json"
+
+#. type: Plain text
+#: lia.json.5:4
+msgid "lia.json - lia configuration file"
+msgstr "lia.json - файл настроек lia"
+
+#. type: Plain text
+#: lia.json.5:9
+msgid ""
+"The JSON structure in this file defines how B<lia>(1) connects to LDAP "
+"server, and what information it searches for."
+msgstr ""
+"Структура JSON определяет, как B<lia>(1) подключается к серверу LDAP "
+"и какая информация при этом читается."
+
+#. type: SH
+#: lia.json.5:9
+#, no-wrap
+msgid "DICTIONARY MEMBERS"
+msgstr "КОМПОНЕНТЫ СЛОВАРЯ"
+
+#. type: TP
+#: lia.json.5:10
+#, no-wrap
+msgid "B<uri>"
+msgstr "B<uri>"
+
+#. type: Plain text
+#: lia.json.5:13
+msgid "One or more space-delimited URIs of the LDAP server."
+msgstr ""
+"Один или несколько адресов URI, разделённых пробелами, по которым находится"
+" сервер LDAP."
+
+#. type: TP
+#: lia.json.5:13
+#, no-wrap
+msgid "B<page>"
+msgstr "B<page>"
+
+#. type: Plain text
+#: lia.json.5:16
+msgid "Optional. Page size to request for search operations."
+msgstr "Необязательный. Размер страницы, запрашиваемый при операциях поиска."
+
+#. type: Plain text
+#: lia.json.5:18
+msgid "Default: 100."
+msgstr "По умолчанию: 100."
+
+#. type: TP
+#: lia.json.5:18
+#, no-wrap
+msgid "B<cache_time>"
+msgstr "B<cache_time>"
+
+#. type: Plain text
+#: lia.json.5:22
+msgid ""
+"Optional. Maximum age (in seconds) of the inventory cache at "
+"I<$XDG_CACHE_HOME/lia.json> or I<~/.cache/lia.json>."
+msgstr ""
+"Необязательный. Максимальное время жизни (в секундах) кэша инвентаря в файле "
+"I<$XDG_CACHE_HOME/lia.json> или I<~/.cache/lia.json>."
+
+#. type: Plain text
+#: lia.json.5:24
+msgid "Default: 10800."
+msgstr "По умолчанию: 10800."
+
+#. type: TP
+#: lia.json.5:24
+#, no-wrap
+msgid "B<hosts>"
+msgstr "B<hosts>"
+
+#. type: Plain text
+#: lia.json.5:28
+msgid ""
+"A dictionary defining how to search for hosts and which attributes to "
+"request."
+msgstr ""
+"Словарь, определяющий способ поиска хостов, а также запрашиваемые атрибуты."
+
+#. type: TP
+#: lia.json.5:28
+#, no-wrap
+msgid "B<groups>"
+msgstr "B<groups>"
+
+#. type: Plain text
+#: lia.json.5:32
+msgid ""
+"A list of dictionaries, each defining how to search for groups, which "
+"attributes to request, and how to interpret host membership."
+msgstr ""
+"Массив словарей, каждый из которых определяет способ поиска групп,"
+" запрашиваемые атрибуты и способ определения членства в группе."
+
+#. type: SS
+#: lia.json.5:32
+#, no-wrap
+msgid "Members of hosts dictionary"
+msgstr "Компоненты словаря hosts"
+
+#. type: TP
+#: lia.json.5:33
+#, no-wrap
+msgid "B<base>"
+msgstr "B<base>"
+
+#. type: Plain text
+#: lia.json.5:36
+msgid "The node in LDAP, from which the search starts."
+msgstr "Узел в дереве LDAP, с которого начинается поиск."
+
+#. type: TP
+#: lia.json.5:36
+#, no-wrap
+msgid "B<scope>"
+msgstr "B<scope>"
+
+#. type: Plain text
+#: lia.json.5:41
+msgid ""
+"Optional. LDAP search scope, may only be B<sub> for subtree search or any "
+"other value for base search.  This is a limitation imposed by the ldap3 "
+"library abstraction objects."
+msgstr ""
+"Необязательный. Область поиска LDAP: допускается либо значение B<sub> для"
+" поиска в поддереве (subtree), либо любое другое значение для поиска в"
+" основании дерева (base). Это ограничение накладывается абстрактными"
+" объектами библиотеки ldap3."
+
+#. type: Plain text
+#: lia.json.5:43
+msgid "Default: B<sub>."
+msgstr "По умолчанию: B<sub>."
+
+#. type: TP
+#: lia.json.5:43
+#, no-wrap
+msgid "B<objectclass>"
+msgstr "B<objectclass>"
+
+#. type: Plain text
+#: lia.json.5:46
+msgid "A list of object class names to search for."
+msgstr "Массив имён классов объектов для поиска."
+
+#. type: TP
+#: lia.json.5:46 lia.json.5:102
+#, no-wrap
+msgid "B<attr>"
+msgstr "B<attr>"
+
+#. type: Plain text
+#: lia.json.5:50 lia.json.5:106
+msgid ""
+"A dictionary describing attributes to request. The following members are "
+"required:"
+msgstr ""
+"Словарь, определяющий запрашиваемые атрибуты. Допускаются следующие"
+" компоненты:"
+
+#. type: TP
+#: lia.json.5:51
+#, no-wrap
+msgid "B<name>"
+msgstr "B<name>"
+
+#. type: Plain text
+#: lia.json.5:54
+msgid "The attribute containing host name (e.g. \"cn\")."
+msgstr "Атрибут, содержащий имя хоста (напр. \"cn\")."
+
+#. type: Plain text
+#: lia.json.5:58
+msgid ""
+"If multiple values are returned for a single object (in other words, a host "
+"has multiple names), B<lia> will pick the one in common with the RDN "
+"components."
+msgstr ""
+"Если для одного объекта найдено несколько значений (иными словами, у хоста"
+" несколько имён), то B<lia> выберет то имя, которое присутствует в одном из"
+" компонентов RDN."
+
+#. type: Plain text
+#: lia.json.5:60
+msgid "If none of the values are in the RDN, use the first alphabetically."
+msgstr ""
+"Если ни одно значение не присутствует в RDN, выбирается первое по алфавиту."
+
+#. type: Plain text
+#: lia.json.5:62
+msgid "For example:"
+msgstr "Например:"
+
+#. type: TP
+#: lia.json.5:63 lia.json.5:73 lia.json.5:83
+#, no-wrap
+msgid "LDAP object:"
+msgstr "Объект LDAP:"
+
+#. type: Plain text
+#: lia.json.5:69
+#, no-wrap
+msgid ""
+"dn: cn=charlie,dc=example,dc=net\n"
+"cn: charlie\n"
+"cn: alpha\n"
+msgstr ""
+"dn: cn=charlie,dc=example,dc=net\n"
+"cn: charlie\n"
+"cn: alpha\n"
+
+#. type: TP
+#: lia.json.5:70 lia.json.5:80 lia.json.5:90
+#, no-wrap
+msgid "Host name:"
+msgstr "Имя хоста:"
+
+#. type: Plain text
+#: lia.json.5:73
+msgid "charlie"
+msgstr "charlie"
+
+#. type: Plain text
+#: lia.json.5:79
+#, no-wrap
+msgid ""
+"dn: vCPU=2+cn=bravo,dc=example,dc=net\n"
+"cn: bravo\n"
+"cn: alpha\n"
+msgstr ""
+"dn: vCPU=2+cn=bravo,dc=example,dc=net\n"
+"cn: bravo\n"
+"cn: alpha\n"
+
+#. type: Plain text
+#: lia.json.5:83
+msgid "bravo"
+msgstr "bravo"
+
+#. type: Plain text
+#: lia.json.5:89
+#, no-wrap
+msgid ""
+"dn: uuid=e035608b-cf04-4d2a-9451-0a7813c5225d,dc=example,dc=net\n"
+"cn: bravo\n"
+"cn: alpha\n"
+msgstr ""
+"dn: uuid=e035608b-cf04-4d2a-9451-0a7813c5225d,dc=example,dc=net\n"
+"cn: bravo\n"
+"cn: alpha\n"
+
+#. type: Plain text
+#: lia.json.5:93
+msgid "alpha"
+msgstr "alpha"
+
+#. type: TP
+#: lia.json.5:94
+#, no-wrap
+msgid "B<var>"
+msgstr "B<var>"
+
+#. type: Plain text
+#: lia.json.5:97
+msgid "The attribute that holds JSON-formatted variables."
+msgstr "Атрибут, содержащий переменные в формате JSON."
+
+#. type: SS
+#: lia.json.5:98
+#, no-wrap
+msgid "Members of each element in groups list"
+msgstr "Компоненты каждого словаря в массиве groups"
+
+#. type: TP
+#: lia.json.5:99
+#, no-wrap
+msgid "B<base>, B<scope>, B<objectclass>"
+msgstr "B<base>, B<scope>, B<objectclass>"
+
+#. type: Plain text
+#: lia.json.5:102
+msgid "Group search criteria. See B<Members of hosts dictionary> above."
+msgstr "Критерии поиска групп. См. B<Компоненты словаря hosts> выше."
+
+#. type: TP
+#: lia.json.5:107
+#, no-wrap
+msgid "B<name>, B<var>"
+msgstr "B<name>, B<var>"
+
+#. type: Plain text
+#: lia.json.5:110
+msgid "Identical to the eponymous B<hosts> members, see above."
+msgstr "Аналогично одноимённым компонентам B<hosts>, см. выше."
+
+#. type: TP
+#: lia.json.5:110
+#, no-wrap
+msgid "B<host>"
+msgstr "B<host>"
+
+#. type: Plain text
+#: lia.json.5:113
+msgid "The attribute listing member hosts."
+msgstr "Атрибут, содержащий хосты — члены группы."
+
+#. type: TP
+#: lia.json.5:113
+#, no-wrap
+msgid "B<host_is_dn>"
+msgstr "B<host_is_dn>"
+
+#. type: Plain text
+#: lia.json.5:117
+msgid ""
+"If B<true>, then the attribute defined in B<host> lists distinguished names "
+"of the member hosts. Otherwise, it lists host names."
+msgstr ""
+"Если задано значение B<true>, атрибут, указанный в B<host>, содержит"
+" уникальные имена (distinguished names) "
+"хостов-членов. Иначе он содержит просто имена хостов."
+
+#. type: SH
+#: lia.json.5:118
+#, no-wrap
+msgid "EXAMPLE CONFIGURATION"
+msgstr "ОБРАЗЕЦ ФАЙЛА НАСТРОЕК"
+
+#. type: Plain text
+#: lia.json.5:157
+#, no-wrap
+msgid ""
+"{\n"
+"  \"uri\": \"ldaps://ldap.example.org\",\n"
+"  \"page\": 200,\n"
+"  \"cache_time\": 86400,\n"
+"  \"hosts\": {\n"
+"    \"base\": \"ou=hosts,dc=example,dc=org\",\n"
+"    \"scope\": \"sub\",\n"
+"    \"objectclass\": [\"ansibleHost\", \"device\"],\n"
+"    \"attr\": {\n"
+"      \"name\": \"cn\",\n"
+"      \"var\": \"ansibleVars\"\n"
+"    }\n"
+"  },\n"
+"  \"groups\": [\n"
+"    {\n"
+"      \"base\": \"ou=ansible,ou=groups,dc=example,dc=org\",\n"
+"      \"scope\": \"sub\",\n"
+"      \"objectclass\": [\"groupOfNames\", \"ansibleGroup\"],\n"
+"      \"attr\": {\n"
+"        \"name\": \"cn\",\n"
+"        \"host\": \"member\",\n"
+"        \"host_is_dn\": true,\n"
+"        \"var\": \"ansibleVars\"\n"
+"      }\n"
+"    },\n"
+"    {\n"
+"      \"base\": \"ou=hosts,dc=example,dc=org\",\n"
+"      \"scope\": \"sub\",\n"
+"      \"objectclass\": [\"organizationalUnit\", \"ansibleGroup\"],\n"
+"      \"attr\": {\n"
+"        \"name\": \"ou\",\n"
+"        \"var\": \"ansibleVars\"\n"
+"      }\n"
+"    }\n"
+"  ]\n"
+"}\n"
+msgstr ""
+"{\n"
+"  \"uri\": \"ldaps://ldap.example.org\",\n"
+"  \"page\": 200,\n"
+"  \"cache_time\": 86400,\n"
+"  \"hosts\": {\n"
+"    \"base\": \"ou=hosts,dc=example,dc=org\",\n"
+"    \"scope\": \"sub\",\n"
+"    \"objectclass\": [\"ansibleHost\", \"device\"],\n"
+"    \"attr\": {\n"
+"      \"name\": \"cn\",\n"
+"      \"var\": \"ansibleVars\"\n"
+"    }\n"
+"  },\n"
+"  \"groups\": [\n"
+"    {\n"
+"      \"base\": \"ou=ansible,ou=groups,dc=example,dc=org\",\n"
+"      \"scope\": \"sub\",\n"
+"      \"objectclass\": [\"groupOfNames\", \"ansibleGroup\"],\n"
+"      \"attr\": {\n"
+"        \"name\": \"cn\",\n"
+"        \"host\": \"member\",\n"
+"        \"host_is_dn\": true,\n"
+"        \"var\": \"ansibleVars\"\n"
+"      }\n"
+"    },\n"
+"    {\n"
+"      \"base\": \"ou=hosts,dc=example,dc=org\",\n"
+"      \"scope\": \"sub\",\n"
+"      \"objectclass\": [\"organizationalUnit\", \"ansibleGroup\"],\n"
+"      \"attr\": {\n"
+"        \"name\": \"ou\",\n"
+"        \"var\": \"ansibleVars\"\n"
+"      }\n"
+"    }\n"
+"  ]\n"
+"}\n"
+
+#. type: Plain text
+#: lia.json.5:160
+msgid "B<lia>(1)"
+msgstr "B<lia>(1)"
+
