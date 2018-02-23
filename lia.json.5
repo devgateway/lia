@@ -115,3 +115,46 @@ The attribute listing member hosts.
 If \fBtrue\fR, then the attribute defined in \fBhost\fR lists distinguished
 names of the member hosts. Otherwise, it lists host names.
 .RE
+.SH "EXAMPLE CONFIGURATION"
+.PP
+.EX
+{
+  "uri": "ldaps://ldap.example.org",
+  "page": 200,
+  "cache_time": 86400,
+  "hosts": {
+    "base": "ou=hosts,dc=example,dc=org",
+    "scope": "sub",
+    "objectclass": ["ansibleHost", "device"],
+    "attr": {
+      "name": "cn",
+      "var": "ansibleVars"
+    }
+  },
+  "groups": [
+    {
+      "base": "ou=ansible,ou=groups,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["groupOfNames", "ansibleGroup"],
+      "attr": {
+        "name": "cn",
+        "host": "member",
+        "host_is_dn": true,
+        "var": "ansibleVars"
+      }
+    },
+    {
+      "base": "ou=hosts,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["organizationalUnit", "ansibleGroup"],
+      "attr": {
+        "name": "ou",
+        "var": "ansibleVars"
+      }
+    }
+  ]
+}
+.EE
+.PP
+.SH "SEE ALSO"
+.BR lia (1)

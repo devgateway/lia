@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
         name = "lia",
-        version = "0.1",
+        version = "1.0",
         license = "GPLv3+",
         description = "LDAP Inventory for Ansible",
         author = "Development Gateway",
