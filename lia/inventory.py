@@ -37,25 +37,16 @@ def entry_name(entry, name_attr):
         # if there's just one value, use it
         name = values[0]
     else:
-        name_vals = set(values)
-
-        # find, if any of them are in RDN
-        rdn_vals = set()
+        name = None
+        # find the attribute used in RDN
         for component in safe_rdn(entry.entry_dn, decompose = True):
             if component[0] == name_attr:
-                rdn_vals.add(component[1])
+                name = component[1]
+                break
 
-        common_vals = rdn_vals & name_vals
-        matched = len(common_vals)
-        if matched == 1:
-            # only one value used in RDN
-            name = list(common_vals)[0]
-        elif matched:
-            # multiple values in RDN; use first of them alphabetically
-            name = sorted(list(common_vals))[0]
-        else:
-            # none in RDN at all; use first name alphabetically
-            name = sorted(list(name_vals))[0]
+        if name is None:
+            # values not in RDN at all; use first name alphabetically
+            name = sorted(values)[0]
 
     return name
 
