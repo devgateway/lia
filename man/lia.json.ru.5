@@ -1,0 +1,167 @@
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH lia.json 5 "23 февраля 2018 г." "версия 1.0" 
+.SH ИМЯ
+lia.json \- файл настроек lia
+.SH ОБЗОР
+\fI$XDG_CONFIG_HOME/lia.json\fP, \fI~/.config/lia.json\fP
+.SH ОПИСАНИЕ
+Структура JSON определяет, как \fBlia\fP(1) подключается к серверу LDAP и какая
+информация при этом читается.
+.SH "КОМПОНЕНТЫ СЛОВАРЯ"
+.TP 
+\fBuri\fP
+Один или несколько адресов URI, разделённых пробелами, по которым находится
+сервер LDAP.
+.TP 
+\fBpage\fP
+Необязательный. Размер страницы, запрашиваемый при операциях поиска.
+
+По умолчанию: 100.
+.TP 
+\fBcache_time\fP
+Необязательный. Максимальное время жизни (в секундах) кэша инвентаря в файле
+\fI$XDG_CACHE_HOME/lia.json\fP или \fI~/.cache/lia.json\fP.
+
+По умолчанию: 10800.
+.TP 
+\fBhosts\fP
+Словарь, определяющий способ поиска хостов, а также запрашиваемые атрибуты.
+.TP 
+\fBgroups\fP
+Массив словарей, каждый из которых определяет способ поиска групп,
+запрашиваемые атрибуты и способ определения членства в группе.
+.SS "Компоненты словаря hosts"
+.TP 
+\fBbase\fP
+Узел в дереве LDAP, с которого начинается поиск.
+.TP 
+\fBscope\fP
+Необязательный. Область поиска LDAP: допускается либо значение \fBsub\fP для
+поиска в поддереве (subtree), либо любое другое значение для поиска в
+основании дерева (base). Это ограничение накладывается абстрактными
+объектами библиотеки ldap3.
+
+По умолчанию: \fBsub\fP.
+.TP 
+\fBobjectclass\fP
+Массив имён классов объектов для поиска.
+.TP 
+\fBattr\fP
+Словарь, определяющий запрашиваемые атрибуты. Допускаются следующие
+компоненты:
+.RS
+.TP 
+\fBname\fP
+Атрибут, содержащий имя хоста (напр. "cn").
+
+Если для одного объекта найдено несколько значений (иными словами, у хоста
+несколько имён), то \fBlia\fP выберет то имя, которое присутствует в одном из
+компонентов RDN.
+
+Если ни одно значение не присутствует в RDN, выбирается первое по алфавиту.
+
+Например:
+.RS
+.TP 
+Объект LDAP:
+.EX
+dn: cn=charlie,dc=example,dc=net
+cn: charlie
+cn: alpha
+.EE
+.TP 
+Имя хоста:
+charlie
+.TP 
+Объект LDAP:
+.EX
+dn: vCPU=2+cn=bravo,dc=example,dc=net
+cn: bravo
+cn: alpha
+.EE
+.TP 
+Имя хоста:
+bravo
+.TP 
+Объект LDAP:
+.EX
+dn: uuid=e035608b\-cf04\-4d2a\-9451\-0a7813c5225d,dc=example,dc=net
+cn: bravo
+cn: alpha
+.EE
+.TP 
+Имя хоста:
+alpha
+.RE
+.TP 
+\fBvar\fP
+Атрибут, содержащий переменные в формате JSON.
+.RE
+.SS "Компоненты каждого словаря в массиве groups"
+.TP 
+\fBbase\fP, \fBscope\fP, \fBobjectclass\fP
+Критерии поиска групп. См. \fBКомпоненты словаря hosts\fP выше.
+.TP 
+\fBattr\fP
+Словарь, определяющий запрашиваемые атрибуты. Допускаются следующие
+компоненты:
+.RS
+.TP 
+\fBname\fP, \fBvar\fP
+Аналогично одноимённым компонентам \fBhosts\fP, см. выше.
+.TP 
+\fBhost\fP
+Атрибут, содержащий хосты — члены группы.
+.TP 
+\fBhost_is_dn\fP
+Если задано значение \fBtrue\fP, атрибут, указанный в \fBhost\fP, содержит
+уникальные имена (distinguished names) хостов\-членов. Иначе он содержит
+просто имена хостов.
+.RE
+.SH "ОБРАЗЕЦ ФАЙЛА НАСТРОЕК"
+.PP
+.EX
+{
+  "uri": "ldaps://ldap.example.org",
+  "page": 200,
+  "cache_time": 86400,
+  "hosts": {
+    "base": "ou=hosts,dc=example,dc=org",
+    "scope": "sub",
+    "objectclass": ["ansibleHost", "device"],
+    "attr": {
+      "name": "cn",
+      "var": "ansibleVars"
+    }
+  },
+  "groups": [
+    {
+      "base": "ou=ansible,ou=groups,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["groupOfNames", "ansibleGroup"],
+      "attr": {
+        "name": "cn",
+        "host": "member",
+        "host_is_dn": true,
+        "var": "ansibleVars"
+      }
+    },
+    {
+      "base": "ou=hosts,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["organizationalUnit", "ansibleGroup"],
+      "attr": {
+        "name": "ou",
+        "var": "ansibleVars"
+      }
+    }
+  ]
+}
+.EE
+.PP
+.SH "СМ. ТАКЖЕ"
+\fBlia\fP(1)

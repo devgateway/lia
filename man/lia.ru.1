@@ -1,0 +1,53 @@
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH lia 1 "23 февраля 2018 г." "версия 1.0" 
+.SH ИМЯ
+lia \- инвентарь для Ansible из LDAP
+.SH ОБЗОР
+\fBlia\fP [\fB\-h\fP] (\fB\-\-list\fP|\fB\-\-host\fP \fIХОСТ\fP)
+.SH ОПИСАНИЕ
+\fBlia\fP это вспомогательный скрипт для чтения хостов, групп и переменных с
+сервера LDAP и предоставления их \fBansible\fP(1).  \fBlia\fP отличается гибкой
+конфигурацией с поддержкой кэширования и адаптируется к любой схеме LDAP.
+
+Программа кэширует инвентарь в формате JSON и читает из кэша, пока он не
+устареет.
+.SH ОПЦИИ
+.TP 
+\fB\-h\fP, \fB\-\-help\fP
+Показать информацию об использовании и выйти.
+.TP 
+\fB\-\-list\fP
+Вывести все группы и переменные.
+.TP 
+\fB\-\-host\ \fP\fIХОСТ\fP
+Вывести переменные для хоста \fIХОСТ\fP.
+.SH "ВОЗВРАЩАЕМЫЕ ЗНАЧЕНИЯ"
+Возвращает ноль, если инвентарь был прочитан.
+.SH ОКРУЖЕНИЕ
+.TP 
+\fBLOG_LEVEL\fP
+Задаёт уровень журналирования, выводимого в стандартный вывод
+ошибок. Доступные уровни: \fBCRITICAL\fP, \fBERROR\fP, \fBWARNING\fP (по умолчанию),
+\fBINFO\fP и \fBDEBUG\fP.
+.SH ФАЙЛЫ
+.TP 
+\fI$XDG_CONFIG_HOME/lia.json\fP, \fI~/.config/lia.json\fP
+Файл настроек, см. \fBlia.json\fP(5).
+.TP 
+\fI$XDG_CACHE_HOME/lia.json\fP, \fI~/.cache/lia.json\fP
+Закэшированный инвентарь.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.IP \(em 4
+.UR http://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html
+Разработка динамических источников инвентаря
+.UE
+.IP \(em 4
+.UR https://specifications.freedesktop.org/basedir\-spec/basedir\-spec\-0.6.html
+Спецификация базового каталога XDG
+.UE
+.SH "СМ. ТАКЖЕ"
+\fBlia.json\fP(5), \fBansible\fP(1)
