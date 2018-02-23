@@ -1,36 +1,36 @@
 {
-	"uri": "ldaps://ldap.example.org",
-	"page": 200,
-	"cache_time": 86400,
-	"hosts": {
-		"base": "ou=hosts,dc=example,dc=org",
-		"scope": "sub",
-		"objectclass": ["ansibleHost", "device"],
-		"attr": {
-			"name": "cn",
-			"var": "ansibleVars"
-		}
-	},
-	"groups": [
-		{
-			"base": "ou=ansible,ou=groups,dc=example,dc=org",
-			"scope": "sub",
-			"objectclass": ["groupOfNames", "ansibleGroup"],
-			"attr": {
-				"name": "cn",
-				"host": "member",
-				"host_is_dn": true,
-				"var": "ansibleVars"
-			}
-		},
-		{
-			"base": "ou=hosts,dc=example,dc=org",
-			"scope": "sub",
-			"objectclass": ["organizationalUnit", "ansibleGroup"],
-			"attr": {
-				"name": "ou",
-				"var": "ansibleVars"
-			}
-		}
-	]
+  "uri": "ldaps://ldap.example.org",
+  "page": 200,
+  "cache_time": 86400,
+  "hosts": {
+    "base": "ou=hosts,dc=example,dc=org",
+    "scope": "sub",
+    "objectclass": ["ansibleHost", "device"],
+    "attr": {
+      "name": "cn",
+      "var": "ansibleVars"
+    }
+  },
+  "groups": [
+    {
+      "base": "ou=ansible,ou=groups,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["groupOfNames", "ansibleGroup"],
+      "attr": {
+        "name": "cn",
+        "host": "member",
+        "host_is_dn": true,
+        "var": "ansibleVars"
+      }
+    },
+    {
+      "base": "ou=hosts,dc=example,dc=org",
+      "scope": "sub",
+      "objectclass": ["organizationalUnit", "ansibleGroup"],
+      "attr": {
+        "name": "ou",
+        "var": "ansibleVars"
+      }
+    }
+  ]
 }
