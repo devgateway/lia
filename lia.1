@@ -26,7 +26,7 @@ Print all groups and variables.
 .BI \-\-host\  HOST
 Print variables for the host \fIHOST\fR.
 .SH "EXIT STATUS"
-Returns zero if the operation succeeded.
+Returns zero if the inventory was retrieved.
 .SH ENVIRONMENT
 .TP
 .B LOG_LEVEL
@@ -37,7 +37,20 @@ Recognized level are:
 .BR WARNING " (default),"
 .BR INFO ", and "
 .BR DEBUG .
-.SH SEE ALSO
+.SH FILES
+.TP
+.IR $XDG_CONFIG_HOME/lia.json ", " ~/.config/lia.json
+Configuration file, see \fBlia.json\fR(5).
+.TP
+.IR $XDG_CACHE_HOME/lia.json ", " ~/.cache/lia.json
+Cached inventory.
+.SH "CONFORMING TO"
+.IP \(em 4
 .UR http://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html
 Developing Dynamic Inventory Sources
 .UE
+.IP \(em 4
+.UR https://specifications.freedesktop.org/basedir-spec/basedir-spec-0.6.html
+XDG Base Directory Specification
+.UE
+.SH "SEE ALSO"
