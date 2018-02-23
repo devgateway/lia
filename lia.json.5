@@ -1,0 +1,94 @@
+.TH lia.json 5 "23 Feb 2018" "version 1.0"
+.SH NAME
+lia.json \- lia configuration file
+.SH SYNOPSIS
+.IR $XDG_CONFIG_HOME/lia.json ", " ~/.config/lia.json
+.SH DESCRIPTION
+The JSON structure in this file defines how \fBlia\fR(1) connects to LDAP
+server, and what information it searches for.
+.SH DICTIONARY MEMBERS
+.TP
+.B uri
+One or more space-delimited URIs of the LDAP server.
+.TP
+.B page
+Optional. Page size to request for search operations.
+
+Default: 100.
+.TP
+.B cache_time
+Optional. Maximum age (in seconds) of the inventory cache at
+.IR $XDG_CACHE_HOME/lia.json " or " ~/.cache/lia.json .
+
+Default: 10800.
+.TP
+.B hosts
+A dictionary defining how to search for hosts and which attributes to
+request.
+.TP
+.B groups
+A list of dictionaries, each defining how to search for groups, which
+attributes to request, and how to interpret host membership.
+.SS "\fBhosts\fR members"
+.TP
+.B base
+The node in LDAP, from which the search starts.
+.TP
+.B scope
+Optional. LDAP search scope, may only be \fBsub\fR for subtree search or
+any other value for base search.
+This is a limitation imposed by the ldap3 library abstraction objects.
+
+Default: \fBsub\fR.
+.TP
+.B objectclass
+A list of object class names to search for.
+.TP
+.B attr
+A dictionary describing attributes to request. The following members are
+required:
+.RS
+.TP
+.B name
+The attribute containing host name (e.g. "cn").
+
+If multiple values are returned for a single object (in other words, a
+host has multiple names), \fBlia\fR will pick the one in common with the
+RDN components.
+
+If none of the values are in the RDN, use the first alphabetically.
+
+For example:
+.RS
+.TP
+LDAP object:
+.EX
+dn: cn=charlie,dc=example,dc=net
+cn: charlie
+cn: alpha
+.EE
+.TP
+Host name:
+charlie
+.TP
+LDAP object:
+.EX
+dn: vCPU=2+cn=bravo,dc=example,dc=net
+cn: bravo
+cn: alpha
+.EE
+.TP
+Host name:
+bravo
+.TP
+LDAP object:
+.EX
+dn: uuid=e035608b-cf04-4d2a-9451-0a7813c5225d,dc=example,dc=net
+cn: bravo
+cn: alpha
+.EE
+.TP
+Host name:
+alpha
+.RE
+.RE
