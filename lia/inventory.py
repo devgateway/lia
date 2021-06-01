@@ -195,7 +195,18 @@ class Group():
             group = branch.data
             all_groups.add(group)
             try:
-                group.populate_group(hosts_by_name, hosts_by_dn)
+                if self._want_dn:
+                    host_dict = hosts_by_dn
+                else:
+                    host_dict = hosts_by_name
+
+                for key in self._host_keys:
+                    try:
+                        self._hosts.add(host_dict[key])
+                    except KeyError:
+                        _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
+                msg = "%s: %i hosts" % (str(self), len(self._hosts))
+                _log.debug(msg)
             except AttributeError:
                 group.add_children(branch.descendants)
 
@@ -234,20 +245,6 @@ class AttributalGroup(Group):
                 var_array = entry[settings.attr.var].values)
         self._host_keys = entry[settings.attr.host].values
         self._want_dn = None
-
-    def populate_group(self, by_name, by_dn):
-        if self._want_dn:
-            host_dict = by_dn
-        else:
-            host_dict = by_name
-
-        for key in self._host_keys:
-            try:
-                self._hosts.add(host_dict[key])
-            except KeyError:
-                _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
-        msg = "%s: %i hosts" % (str(self), len(self._hosts))
-        _log.debug(msg)
 
 class Inventory:
     def __init__(self):
