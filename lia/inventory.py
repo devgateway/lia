@@ -123,13 +123,15 @@ class Host():
 class Group():
     __ungrouped = None
 
-    def __init__(self, name, var_array):
+    def __init__(self, entry, settings):
         self._hosts = set()
-        self.name = name
+        self.name = entry[settings.attr.name].value
         self._vars = {}
         self.dn = None
-        for json_vars in var_array:
+        for json_vars in entry[settings.attr.var].values:
             self._vars.update( json.loads(json_vars) )
+        self._host_keys = entry[settings.attr.host].values
+        self._want_dn = None
 
     def __str__(self):
         return "Group %s" % self.name
@@ -152,7 +154,6 @@ class Group():
 
             attrs = [settings.attr.name, settings.attr.var]
             attrs.append(settings.attr.host)
-            new_cls = AttributalGroup
 
             _log.info("Loading groups from %s" % (settings.base))
             obj_def = ObjectDef(schema = _ldap, object_class = settings.objectclass)
@@ -163,7 +164,7 @@ class Group():
 
             entries = reader.search_paged(paged_size = _page_size, attributes = attrs)
             for entry in entries:
-                group = new_cls(entry, settings)
+                group = Group(entry, settings)
                 group.dn = entry.entry_dn
                 if group.dn == Host.base:
                     # if host base itself is a group, read its vars
@@ -238,13 +239,6 @@ class Group():
             all_groups.add(all)
 
         return all_groups
-
-class AttributalGroup(Group):
-    def __init__(self, entry, settings):
-        super().__init__(name = entry[settings.attr.name].value,
-                var_array = entry[settings.attr.var].values)
-        self._host_keys = entry[settings.attr.host].values
-        self._want_dn = None
 
 class Inventory:
     def __init__(self):
