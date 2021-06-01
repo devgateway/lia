@@ -151,16 +151,10 @@ class Group():
             groups = []
 
             attrs = [settings.attr.name, settings.attr.var]
-            try:
-                attrs.append(settings.attr.host)
-                group_type = "attributal"
-                new_cls = AttributalGroup
-            except MissingConfigValue:
-                host_attr = None
-                group_type = "structural"
-                new_cls = StructuralGroup
+            attrs.append(settings.attr.host)
+            new_cls = AttributalGroup
 
-            _log.info("Loading %s groups from %s" % (group_type, settings.base))
+            _log.info("Loading groups from %s" % (settings.base))
             obj_def = ObjectDef(schema = _ldap, object_class = settings.objectclass)
             reader = Reader(connection = _ldap,
                     base = settings.base,
@@ -254,36 +248,6 @@ class AttributalGroup(Group):
                 _log.warning("In group %s ignoring unknown host %s" % (self.name, key))
         msg = "%s: %i hosts" % (str(self), len(self._hosts))
         _log.debug(msg)
-
-    def __str__(self):
-        return "Attributal group '%s'" % self.name
-
-class StructuralGroup(Group):
-    def __init__(self, entry, settings):
-        super().__init__(name = entry[settings.attr.name].value,
-                var_array = entry[settings.attr.var].values)
-        self._groups = set()
-
-    def add_children(self, children):
-        for child in children:
-            if isinstance(child.data, Group):
-                self._groups.add(child.data)
-            else:
-                self._hosts.add(child.data)
-        msg = "%s: %i groups, %i hosts" % (
-                str(self), len(self._groups), len(self._hosts) )
-        _log.debug(msg)
-
-    def __str__(self):
-        return "Structural group '%s'" % self.name
-
-    def get_data(self):
-        data = super(__class__, self).get_data()
-
-        if self._groups:
-            data["children"] = [child.name for child in self._groups]
-
-        return data
 
 class Inventory:
     def __init__(self):
